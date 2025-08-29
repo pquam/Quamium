@@ -9,7 +9,14 @@ import (
 	"strings"
 )
 
-func startServer(addr string) string {
+type response struct {
+	url     string
+	status  string
+	headers string
+	body    string
+}
+
+func startServer(addr string) response {
 
 	//disect url
 	scheme := "http"
@@ -31,7 +38,7 @@ func startServer(addr string) string {
 		path += strings.Split(addr, "/")[1]
 	}
 
-	// Check if host/path is cached before connecting to server
+	//todo Check if host/path is cached before connecting to server
 
 	port := "80"
 	if strings.Contains(host, ":") {
@@ -44,7 +51,7 @@ func startServer(addr string) string {
 	fmt.Println("Connecting to " + host + "/" + path + " via " + port)
 
 	//connect to socket via http
-	s, err := net.Dial("tcp", host+":"+port)
+	conn, err := net.Dial("tcp", host+":"+port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,33 +59,40 @@ func startServer(addr string) string {
 	//request web page data via http
 	request := "GET " + path + " HTTP/1.0\r\nHost: " + addr + "\r\n\r\n"
 	fmt.Println("Request: \n" + request)
-	s.Write([]byte(request))
+	conn.Write([]byte(request))
 
 	//read response
-	response := bufio.NewReader(s)
+	resp := bufio.NewReader(conn)
 
-	status, err := response.ReadString('\n')
+	status, err := resp.ReadString('\n')
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Status:\n" + status + "\nHeaders: \n")
 
+	headers := ""
 	for {
-		line, _ := response.ReadString('\n')
+		line, _ := resp.ReadString('\n')
 		if line == "\r\n" {
 			break
 		}
+		headers += line + "\n"
 		fmt.Print(line)
 	}
 
-	body, err := io.ReadAll(response)
+	body, err := io.ReadAll(resp)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Println("\nBody:\n")
 
-	s.Close()
+	conn.Close()
 
-	return string(body)
+	return response{
+		host + "/" + path,
+		status,
+		headers,
+		string(body),
+	}
 }

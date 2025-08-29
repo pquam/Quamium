@@ -17,5 +17,5 @@ func main() {
 	//body := parseHTML(responce)
 
 	//print body
-	fmt.Println(responce)
+	fmt.Println(responce.body)
 }
