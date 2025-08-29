@@ -35,7 +35,7 @@ func startServer(addr string) response {
 
 	path := "/"
 	if strings.Contains(addr, "/") {
-		path += strings.Split(addr, "/")[1]
+		path += strings.TrimRight(addr, "/")
 	}
 
 	//todo Check if host/path is cached before connecting to server
@@ -48,7 +48,7 @@ func startServer(addr string) response {
 		port = "443"
 	}
 
-	fmt.Println("Connecting to " + host + "/" + path + " via " + port)
+	fmt.Println("Connecting to " + host + path + " via " + port)
 
 	//connect to socket via http
 	conn, err := net.Dial("tcp", host+":"+port)
@@ -57,7 +57,7 @@ func startServer(addr string) response {
 	}
 
 	//request web page data via http
-	request := "GET " + path + " HTTP/1.0\r\nHost: " + addr + "\r\n\r\n"
+	request := "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n"
 	fmt.Println("Request: \n" + request)
 	conn.Write([]byte(request))
 
