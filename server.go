@@ -25,9 +25,9 @@ func startServer(addr string) string {
 		host = addr
 	}
 
-	path := ""
+	path := "/"
 	if strings.Contains(addr, "/") {
-		path = strings.Split(addr, "/")[1]
+		path += strings.Split(addr, "/")[1]
 	}
 
 	port := "80"
@@ -38,7 +38,7 @@ func startServer(addr string) string {
 		port = "443"
 	}
 
-	fmt.Println("Connecting to " + host + " via " + port)
+	fmt.Println("Connecting to " + host + "/" + path + " via " + port)
 
 	//connect to socket via http
 	s, err := net.Dial("tcp", host+":"+port)
@@ -56,6 +56,8 @@ func startServer(addr string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	s.Close()
 
 	return response
 }
