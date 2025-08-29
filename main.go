@@ -21,10 +21,10 @@ func main() {
 		response := startServer(url)
 
 		//parse html
-		//body := parseHTML(responce)
+		body := parseHTML(response.body)
 
 		//print body
-		fmt.Println(response.body)
+		fmt.Println(body)
 	}
 
 }

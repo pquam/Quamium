@@ -17,6 +17,13 @@ type response struct {
 	body    string
 }
 
+type getRequest struct {
+	get        string
+	host       string
+	userAgent  string
+	connection string
+}
+
 func startServer(addr string) response {
 
 	//disect url
@@ -67,10 +74,10 @@ func startServer(addr string) response {
 	}
 
 	//request web page data via http
-	request := "GET " + scheme + "://" + path + " HTTP/1.1\r\nHost: " + host + "\r\nUser-Agent: PatrickQuam (X11; Ubuntu; Linux x86_64; rv:142.0) Gecko/20100101 Quamium" + "\r\n\r\n"
+	//request := "GET " + scheme + "://" + path + " HTTP/1.0\r\nHost: " + host + "\r\nUser-Agent: PatrickQuam (X11; Ubuntu; Linux x86_64; rv:142.0) Gecko/20100101 Quamium" + "\r\n\r\n"
 
-	fmt.Println("Request: \n" + request)
-	conn.Write([]byte(request))
+	fmt.Println("Request: \n" + get(scheme, host, path))
+	conn.Write([]byte(get(scheme, host, path)))
 
 	//read response
 	resp := bufio.NewReader(conn)
@@ -106,4 +113,16 @@ func startServer(addr string) response {
 		headers,
 		string(body),
 	}
+}
+
+func get(scheme string, host string, path string) string {
+
+	var myRequest getRequest = getRequest{
+		"GET " + scheme + "://" + path + " HTTP/1.1\r\n",
+		"Host: " + host + "\r\n",
+		"User-Agent: PatrickQuam (X11; Ubuntu; Linux x86_64; rv:142.0) Gecko/20100101 Quamium\r\n",
+		"connection: close\r\n\r\n",
+	}
+
+	return myRequest.get + myRequest.host + myRequest.userAgent + myRequest.connection
 }
