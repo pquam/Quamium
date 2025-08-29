@@ -1,0 +1,43 @@
+# Compiled binaries and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Coverage outputs
+*.out
+coverage.out
+
+# Local build artifacts
+bin/
+build/
+dist/
+/main
+/Quamium
+
+# Dependency vendor dir (uncomment to ignore if you vendor)
+# vendor/
+
+# Go workspace file (commit only if you intentionally use workspaces)
+go.work
+
+# Logs
+*.log
+
+# Editor/IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env files (if used)
+.env
+.env.*
+
