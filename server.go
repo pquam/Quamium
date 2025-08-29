@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
@@ -35,7 +36,7 @@ func startServer(addr string) response {
 
 	path := "/"
 	if strings.Contains(addr, "/") {
-		path += strings.TrimRight(addr, "/")
+		path = strings.TrimRight(addr, "/")
 	}
 
 	//todo Check if host/path is cached before connecting to server
@@ -48,16 +49,26 @@ func startServer(addr string) response {
 		port = "443"
 	}
 
-	fmt.Println("Connecting to " + host + path + " via " + port)
+	fmt.Println("Connecting to " + path + " via " + port)
 
 	//connect to socket via http
-	conn, err := net.Dial("tcp", host+":"+port)
+	var conn net.Conn
+	var err error
+
+	if scheme == "https" {
+		conn, err = tls.Dial("tcp", net.JoinHostPort(host, port), &tls.Config{
+			ServerName: host, // SNI + cert verification
+		})
+	} else {
+		conn, err = net.Dial("tcp", net.JoinHostPort(host, port))
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//request web page data via http
-	request := "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n"
+	request := "GET " + scheme + "://" + path + " HTTP/1.1\r\nHost: " + host + "\r\nUser-Agent: PatrickQuam (X11; Ubuntu; Linux x86_64; rv:142.0) Gecko/20100101 Quamium" + "\r\n\r\n"
+
 	fmt.Println("Request: \n" + request)
 	conn.Write([]byte(request))
 
