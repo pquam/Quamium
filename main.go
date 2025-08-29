@@ -1,19 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"os"
+
+	"gioui.org/app"
+)
 
 func main() {
 
-	url := ""
-	for {
+	/*
+		url := ""
 		//get url from user
 		fmt.Println("Input URL or QUIT:")
 
 		fmt.Scanln(&url)
-
-		if url == "QUIT" {
-			break
-		}
 
 		fmt.Println("Data from URL: ", url)
 
@@ -23,8 +24,17 @@ func main() {
 		//parse html
 		body := parseHTML(response.body)
 
-		//print body
-		fmt.Println(body)
-	}
+	*/
+
+	go func() {
+		window := new(app.Window)
+		window.Option(app.Title("Quamium"))
+		err := run(window)
+		if err != nil {
+			log.Fatal(err)
+		}
+		os.Exit(0)
+	}()
+	app.Main()
 
 }

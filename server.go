@@ -103,8 +103,6 @@ func startServer(addr string) response {
 		log.Fatal(err)
 	}
 
-	fmt.Println("\nBody:\n")
-
 	conn.Close()
 
 	return response{

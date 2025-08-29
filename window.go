@@ -1,0 +1,154 @@
+package main
+
+import (
+	"image/color"
+	"strings"
+
+	"gioui.org/app"
+	"gioui.org/font"
+	"gioui.org/layout"
+	"gioui.org/op"
+	"gioui.org/text"
+	"gioui.org/unit"
+	"gioui.org/widget"
+	"gioui.org/widget/material"
+)
+
+type C = layout.Context
+type D = layout.Dimensions
+
+func run(w *app.Window) error {
+
+	body := ""
+
+	theme := material.NewTheme()
+
+	// ops are the operations from the UI
+	var ops op.Ops
+
+	// startButton is a clickable widget
+	var searchButton widget.Clickable
+
+	// searchBar is a textfield to input boil duration
+	var searchBar widget.Editor
+
+	// th defines the material design style
+	th := material.NewTheme()
+
+	for {
+		// listen for events in the window.
+		switch e := w.Event().(type) {
+
+		// this is sent when the application should re-render.
+		case app.FrameEvent:
+			gtx := app.NewContext(&ops, e)
+
+			// Let's try out the flexbox layout concept
+			if searchButton.Clicked(gtx) {
+
+				// Read from the input
+				inputString := searchBar.Text()
+				inputString = strings.TrimSpace(inputString)
+
+				body = parseHTML(startServer(inputString).body)
+
+				// Define an large label with an appropriate text:
+				title := material.H1(theme, body)
+
+				// Change the color of the label.
+				maroon := color.NRGBA{R: 127, G: 0, B: 0, A: 255}
+				title.Color = maroon
+
+				// Change the position of the label.
+				title.Alignment = text.Middle
+
+				// Draw the label to the graphics context.
+				title.Layout(gtx)
+
+			}
+
+			layout.Flex{
+				// Vertical alignment, from top to bottom
+				Axis: layout.Vertical,
+				// Empty space is left at the start, i.e. at the top
+				Spacing: layout.SpaceStart,
+			}.Layout(
+				gtx,
+
+				// Always draw search bar + button first
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(
+						gtx,
+						layout.Flexed(
+							1,
+							func(gtx C) D {
+
+								ed := material.Editor(th, &searchBar, "URL")
+
+								ed.TextSize = unit.Sp(24)
+
+								searchBar.SingleLine = true
+								searchBar.Alignment = text.Middle
+
+								// Define insets ...
+								margins := layout.Inset{
+									Top:    unit.Dp(20),
+									Right:  unit.Dp(20),
+									Bottom: unit.Dp(20),
+									Left:   unit.Dp(20),
+								}
+
+								border := widget.Border{
+									Color:        color.NRGBA{R: 204, G: 204, B: 204, A: 255},
+									CornerRadius: unit.Dp(3),
+									Width:        unit.Dp(2),
+								}
+
+								return margins.Layout(gtx,
+									func(gtx C) D {
+										return border.Layout(gtx, ed.Layout)
+									},
+								)
+							},
+						),
+
+						layout.Rigid(
+							func(gtx C) D {
+
+								btn := material.Button(th, &searchButton, "Search")
+
+								// Define insets ...
+								margins := layout.Inset{
+									Top:    unit.Dp(20),
+									Right:  unit.Dp(20),
+									Bottom: unit.Dp(20),
+									Left:   unit.Dp(20),
+								}
+
+								return margins.Layout(gtx,
+									func(gtx C) D {
+										return btn.Layout(gtx)
+									},
+								)
+							},
+						),
+					)
+				}),
+
+				// Then the results below
+				layout.Flexed(1, func(gtx C) D {
+					title := material.H1(theme, body)
+					title.Color = color.NRGBA{R: 127, G: 0, B: 0, A: 255}
+					title.Alignment = text.Middle
+					title.Font = font.Font{Typeface: "Comic-Sans"}
+					return title.Layout(gtx)
+				}),
+			)
+			e.Frame(gtx.Ops)
+
+		// this is sent when the application is closed.
+		case app.DestroyEvent:
+			return e.Err
+		}
+	}
+}
