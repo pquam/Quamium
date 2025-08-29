@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"strings"
@@ -30,6 +31,8 @@ func startServer(addr string) string {
 		path += strings.Split(addr, "/")[1]
 	}
 
+	// Check if host/path is cached before connecting to server
+
 	port := "80"
 	if strings.Contains(host, ":") {
 		port = strings.Split(host, ":")[1]
@@ -52,12 +55,30 @@ func startServer(addr string) string {
 	s.Write([]byte(request))
 
 	//read response
-	response, err := bufio.NewReader(s).ReadString('\n')
+	response := bufio.NewReader(s)
+
+	status, err := response.ReadString('\n')
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Status:\n" + status + "\nHeaders: \n")
+
+	for {
+		line, _ := response.ReadString('\n')
+		if line == "\r\n" {
+			break
+		}
+		fmt.Print(line)
+	}
+
+	body, err := io.ReadAll(response)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	fmt.Println("\nBody:\n")
+
 	s.Close()
 
-	return response
+	return string(body)
 }
