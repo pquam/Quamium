@@ -27,9 +27,9 @@ func main() {
 	*/
 
 	go func() {
-		window := new(app.Window)
-		window.Option(app.Title("Quamium"))
-		err := run(window)
+		browser := new(app.Window)
+		browser.Option(app.Title("Quamium"))
+		err := load(browser)
 		if err != nil {
 			log.Fatal(err)
 		}
