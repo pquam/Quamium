@@ -1,6 +1,10 @@
 # Quamium
 A simple web browser application written in GO
 
+
+# THIS BRANCH IS DEPRECATED
+After making some progress on this project, I found that the graphics libraries in go are not sufficient for my needs of this project, so I am going to start over in C++.
+
 This project is based on the Web Browser Engineering book by Pavel Panchekha & Chris Harrelson
 It can be found online here: https://browser.engineering/
 
