@@ -17,6 +17,9 @@ public:
     Quamium(QWidget *parent = nullptr);
     ~Quamium();
 
+private slots:
+    void onSearchButtonClicked();
+
 private:
     Ui::Quamium *ui;
 };

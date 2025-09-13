@@ -6,26 +6,76 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>892</width>
     <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Quamium</string>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>26</height>
-    </rect>
-   </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="horizontalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>891</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLineEdit" name="searchBar">
+       <property name="placeholderText">
+        <string>https://patrick.quam.computer</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="searchButton">
+       <property name="text">
+        <string>Search</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>searchBar</sender>
+   <signal>returnPressed()</signal>
+   <receiver>searchButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>755</x>
+     <y>25</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>851</x>
+     <y>26</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>searchButton</sender>
+   <signal>click()</signal>
+   <receiver>searchBar</receiver>
+   <slot>copy()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>851</x>
+     <y>26</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>755</x>
+     <y>25</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
