@@ -4,13 +4,15 @@
 #include <string>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#include "server.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
+
+
+#include "server.h"
 
 
     Server::Server() {
@@ -31,7 +33,9 @@
 
         if (refresh) {
             url = parseInputToURL(input);
+            std::cout << "Making HTTP request to: " << url << std::endl;
             body = httpGet(url);
+            std::cout << "HTTP response body length: " << body.length() << std::endl;
         }
         
         return body;

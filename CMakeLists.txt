@@ -28,6 +28,8 @@ set(PROJECT_SOURCES
         quamium.ui
         server.h
         server.cpp
+        webcanvas.h
+        webcanvas.cpp
         ${TS_FILES}
 )
 
