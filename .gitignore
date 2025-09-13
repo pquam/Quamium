@@ -19,18 +19,11 @@ dist/
 /main
 /Quamium
 
-# Dependency vendor dir (uncomment to ignore if you vendor)
-# vendor/
-
-# Go workspace file (commit only if you intentionally use workspaces)
-go.work
-
 # Logs
 *.log
 
 # Editor/IDE
 .vscode/
-.idea/
 *.code-workspace
 
 # OS files
