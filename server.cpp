@@ -182,7 +182,10 @@
             http::read(stream, buffer, res);
     
             beast::error_code ec;
-            stream.socket().shutdown(tcp::socket::shutdown_both, ec);
+            if (stream.socket().shutdown(tcp::socket::shutdown_both, ec) 
+                && ec != beast::errc::not_connected) {
+                    std::cerr << "Shutdown error: " << ec.message() << "\n";
+            }
     
             return res.body();
         }
