@@ -3,7 +3,6 @@
 #include "server.h"
 
 #include <iostream>
-#include <string>
 
 Quamium::Quamium(QWidget *parent)
     : QMainWindow(parent)
