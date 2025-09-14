@@ -67,8 +67,6 @@ void WebCanvas::setRawHtml(const QString& html) {
 }
 
 void WebCanvas::paintEvent(QPaintEvent* /*ev*/) {
-    static int paintCount = 0;
-    std::cout << "WebCanvas::paintEvent called #" << ++paintCount << ", size: " << width() << "x" << height() << std::endl;
     
     QPainter p(this);
     
@@ -80,11 +78,7 @@ void WebCanvas::paintEvent(QPaintEvent* /*ev*/) {
     // Let Qt handle scrolling - just draw the document normally
     _doc.setTextWidth(width() - 2 * _doc.documentMargin());
     
-    std::cout << "Drawing document, text width: " << _doc.textWidth() << ", doc size: " << _doc.size().width() << "x" << _doc.size().height() << std::endl;
-    std::cout << "Document has content: " << (_doc.isEmpty() ? "NO" : "YES") << std::endl;
-    
-    _doc.drawContents(&p);
-    
+    _doc.drawContents(&p); 
 }
 
 void WebCanvas::wheelEvent(QWheelEvent* ev) {
