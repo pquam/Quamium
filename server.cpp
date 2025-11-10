@@ -49,6 +49,10 @@
 
         std::cerr << "initial input: " + input << std::endl;
 
+        if (input.empty()) {
+            input = "https://patrick.quam.computer";
+        }
+
         int i = 0;
 
         if (input.find("://") != std::string::npos) {
