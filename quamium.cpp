@@ -26,6 +26,7 @@ Quamium::Quamium(QWidget *parent)
     
     // Connect the search button's clicked signal to our slot
     connect(ui->searchButton, &QPushButton::clicked, this, &Quamium::onSearchButtonClicked);
+    onSearchButtonClicked();
 }
 
 Quamium::~Quamium()
