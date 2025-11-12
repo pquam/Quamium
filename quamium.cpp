@@ -1,11 +1,13 @@
 #include "quamium.h"
 #include "ui_quamium.h"
-#include "server.h"
 #include "webcanvas.h"
-
+#include "server.h"
+#include "lexer.h"
 #include <iostream>
 #include <qobject.h>
 #include <string>
+
+
 
 Quamium::Quamium(QWidget *parent)
     : QMainWindow(parent)
@@ -31,6 +33,7 @@ Quamium::Quamium(QWidget *parent)
 
 Quamium::~Quamium()
 {
+    
     delete ui;
 }
 
@@ -40,7 +43,9 @@ void Quamium::onSearchButtonClicked()
     s.setInput(ui->searchBar->text().toStdString());
     std::cout << s.getBody(true) << std::endl;
 
-    drawBody(s.getBody(true));
+    Lexer l;
+
+    l.lex(s.getBody(true));
 
 }
 
@@ -52,9 +57,7 @@ void Quamium::drawBody(std::string body) {
     
     if (body.empty()) {
         std::cout << "Body is empty!" << std::endl;
-        webCanvas->setHtml("<html><body><h1>No content received</h1></body></html>");
     } else {
         // Use raw HTML method for debugging
-        webCanvas->setRawHtml(QString::fromUtf8(body.data(), (int)body.size()));
     }
 }

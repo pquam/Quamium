@@ -33,6 +33,9 @@ set(PROJECT_SOURCES
         server.cpp
         webcanvas.h
         webcanvas.cpp
+        lexer.h
+        lexer.cpp
+        structs/content.h
         ${TS_FILES}
 )
 

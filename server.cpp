@@ -20,12 +20,15 @@
         url = "https://patrick.quam.computer";
         scheme = "https";
         port = "443";
-        getBody();
 
     }
 
     void Server::setInput(std::string input) {
         this->input = input;
+    }
+
+    std::string Server::getInput() {
+        return input;
     }
 
 

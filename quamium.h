@@ -2,7 +2,6 @@
 #define QUAMIUM_H
 
 #include "webcanvas.h"
-
 #include <QMainWindow>
 #include <string>
 
