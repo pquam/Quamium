@@ -1,7 +1,4 @@
 #include "webcanvas.h"
-#include <QPainter>
-#include <QWheelEvent>
-#include <QResizeEvent>
 #include <iostream>
 
 WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {

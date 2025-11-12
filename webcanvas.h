@@ -2,6 +2,7 @@
 #include <QWidget>
 #include <QTextDocument>
 #include <QString>
+#include <QPainter>
 
 class WebCanvas : public QWidget {
     Q_OBJECT
