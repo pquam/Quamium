@@ -8,11 +8,10 @@ WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {
 
 }
 
-void WebCanvas::setDisplayList() {
+void WebCanvas::setDisplayList(std::vector<DisplayText> display_list) {
 
-    //m_items = items;
 
-    _scrollY = 0;    
+    this->display_list = display_list;    
     
     update();
 }
@@ -20,12 +19,12 @@ void WebCanvas::setDisplayList() {
 void WebCanvas::paintEvent(QPaintEvent* /*ev*/) {
     
     QPainter painter(this);
-    QFont font = painter.font();
-    font.setPixelSize(48);
-    painter.setFont(font);
 
-    painter.drawText(30, 30, "Hello World");
+    for (DisplayText text : display_list) {
 
+        painter.setFont(text.font);
+        painter.drawText(text.x, text.y, text.text);
+    }
 }
 
 void WebCanvas::wheelEvent(QWheelEvent* ev) {

@@ -1,18 +1,18 @@
+#include "structs/content.h"
+
 #include <string>
 #include <vector>
-#include "structs/content.h"
+#include <iostream>
 
 class Lexer {
 
     public:
-        void lex(std::string body);
+        std::vector<Content> lex(std::string body);
 
     protected:
 
     private:
-        bool inTag = false;
         std::string buffer = "";
-        Content content;
         std::vector<Content> out;
 
 };

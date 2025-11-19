@@ -2,8 +2,17 @@
 #define QUAMIUM_H
 
 #include "webcanvas.h"
+#include "ui_quamium.h"
+#include "webcanvas.h"
+#include "server.h"
+#include "lexer.h"
+#include "layout.h"
+
 #include <QMainWindow>
+#include <qobject.h>
+
 #include <string>
+#include <vector>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,6 +35,7 @@ private:
     Ui::Quamium *ui;
     WebCanvas* webCanvas;
 
-    void drawBody(std::string);
+    int width = 900;
+    int height = 600;
 };
 #endif // QUAMIUM_H

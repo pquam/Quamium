@@ -1,38 +1,29 @@
 #include "lexer.h"
-#include <iostream>
 
-void Lexer::lex(std::string body) {
+
+std::vector<Content> Lexer::lex(std::string body) {
+
+    auto emit = [&](bool isTag) {
+        if (buffer.empty()) return;
+        Content chunk;
+        chunk.isTag = isTag;
+        chunk.text = buffer;
+        out.push_back(std::move(chunk));
+        buffer.clear();
+    };
 
     for (char c : body) {
         if (c == '<') {
-            content.isTag = true;
-            if (!buffer.empty()) {
-                content.text = buffer;
-                out.push_back(content);
-                buffer = "";
-            }
-        }
-        else if (c == '>') {
-            content.isTag = false;
-            if (!buffer.empty()) {
-                content.text = buffer;
-                out.push_back(content);
-                buffer = "";
-            }
-        }
-        else {
+            emit(false);
+        } else if (c == '>') {
+            emit(true);
+        } else {
             buffer += c;
         }
     }
 
-    if (!buffer.empty() && !content.isTag) {
-        content.text = buffer;
-        out.push_back(content);
-        buffer = "";
-    }
+    emit(false);
 
-    for (Content i : out) {
-        std::cout << "text: " + i.text + "\n";
-    }
-    
+    return out;
+
 }

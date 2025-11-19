@@ -1,12 +1,4 @@
 #include "quamium.h"
-#include "ui_quamium.h"
-#include "webcanvas.h"
-#include "server.h"
-#include "lexer.h"
-#include <iostream>
-#include <qobject.h>
-#include <string>
-
 
 
 Quamium::Quamium(QWidget *parent)
@@ -15,20 +7,15 @@ Quamium::Quamium(QWidget *parent)
 {
     ui->setupUi(this);
     
-    // Create WebCanvas and set it as the widget for the scroll area
-    webCanvas = new WebCanvas();
-    ui->webCanvas->setWidget(webCanvas);
-    ui->webCanvas->setWidgetResizable(false);  // Disable auto-resizing so we can control the size
-    ui->webCanvas->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    ui->webCanvas->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    webCanvas->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);  // Fixed size policy
-    webCanvas->setMinimumSize(800, 600);
+    // Create WebCanvas and attach it to the central layout so it expands with the window
+    webCanvas = new WebCanvas;
+    webCanvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    ui->gridLayout->addWidget(webCanvas, 0, 0);
     
-    std::cout << "WebCanvas created and added to scroll area" << std::endl;
+    std::cout << "WebCanvas created and added to layout" << std::endl;
     
     // Connect the search button's clicked signal to our slot
     connect(ui->searchButton, &QPushButton::clicked, this, &Quamium::onSearchButtonClicked);
-    onSearchButtonClicked();
 }
 
 Quamium::~Quamium()
@@ -41,23 +28,15 @@ void Quamium::onSearchButtonClicked()
 {
     Server s = Server();
     s.setInput(ui->searchBar->text().toStdString());
-    std::cout << s.getBody(true) << std::endl;
 
     Lexer l;
+    Layout la;
 
-    l.lex(s.getBody(true));
+    std::string body = s.getBody(true);
+    std::cout << body << std::endl;
+    std::vector<Content> tokens = l.lex(body);
+    std::vector<DisplayText> display_list = la.layout(tokens, width);
 
-}
+    webCanvas->setDisplayList(display_list);
 
-void Quamium::drawBody(std::string body) {
-
-    std::cout << "in drawBody!" << std::endl;
-    std::cout << "Body length: " << body.length() << std::endl;
-    std::cout << "Body content (first 200 chars): " << body.substr(0, 200) << std::endl;
-    
-    if (body.empty()) {
-        std::cout << "Body is empty!" << std::endl;
-    } else {
-        // Use raw HTML method for debugging
-    }
 }
