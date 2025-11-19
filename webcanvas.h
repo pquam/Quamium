@@ -3,6 +3,10 @@
 #include <QTextDocument>
 #include <QString>
 #include <QPainter>
+
+#include <iostream>
+
+#include "layout.h"
 #include "structs/DisplayText.h"
 
 class WebCanvas : public QWidget {
@@ -10,15 +14,18 @@ class WebCanvas : public QWidget {
 public:
     explicit WebCanvas(QWidget* parent = nullptr);
 
-    // Call this with your HTTP response body
-    void setDisplayList(std::vector<DisplayText> display_list);
+    // Set the display list and layout used for rendering
+    void setDisplayList(const std::vector<DisplayText>& display_list, const Layout& layout);
+    void clear();
 
 protected:
     void paintEvent(QPaintEvent* ev) override;
     void wheelEvent(QWheelEvent* ev) override;
+    void resizeEvent(QResizeEvent* ev) override;
 
     std::vector<DisplayText> display_list;
 
 private:
+    Layout la;
     qreal _scrollY = 0.0;
 };

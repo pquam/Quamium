@@ -1,5 +1,4 @@
 #include "webcanvas.h"
-#include <iostream>
 
 WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {
 
@@ -8,17 +7,17 @@ WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {
 
 }
 
-void WebCanvas::setDisplayList(std::vector<DisplayText> display_list) {
-
-
-    this->display_list = display_list;    
-    
+void WebCanvas::setDisplayList(const std::vector<DisplayText>& display_list, const Layout& layout) {
+    this->la = layout;
+    this->display_list = display_list;
+    setMinimumSize(layout.getContentWidth(), layout.getContentHeight());
     update();
 }
 
 void WebCanvas::paintEvent(QPaintEvent* /*ev*/) {
     
     QPainter painter(this);
+    painter.fillRect(rect(), palette().window());
 
     for (DisplayText text : display_list) {
 
@@ -32,3 +31,14 @@ void WebCanvas::wheelEvent(QWheelEvent* ev) {
     QWidget::wheelEvent(ev);
 }
 
+void WebCanvas::resizeEvent(QResizeEvent* ev) {
+    QWidget::resizeEvent(ev);
+    auto updatedList = this->la.layout(0.95 * WebCanvas::width());
+    this->display_list = updatedList;
+    setMinimumSize(la.getContentWidth(), la.getContentHeight());
+}
+
+void WebCanvas::clear() {
+    this->display_list.clear();
+    update();
+}

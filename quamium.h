@@ -10,6 +10,7 @@
 
 #include <QMainWindow>
 #include <qobject.h>
+#include <QVBoxLayout>
 
 #include <string>
 #include <vector>
@@ -35,7 +36,7 @@ private:
     Ui::Quamium *ui;
     WebCanvas* webCanvas;
 
-    int width = 900;
-    int height = 600;
+    int width = 1600;
+    int height = 900;
 };
 #endif // QUAMIUM_H
