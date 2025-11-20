@@ -3,6 +3,9 @@
 #include <QTextDocument>
 #include <QString>
 #include <QPainter>
+#include <QPaintEvent>
+#include <QScrollArea>
+#include <QScrollBar>
 
 #include <iostream>
 
@@ -17,6 +20,9 @@ public:
     // Set the display list and layout used for rendering
     void setDisplayList(const std::vector<DisplayText>& display_list, const Layout& layout);
     void clear();
+    void setScrollArea(QScrollArea* area);
+    int verticalScrollOffset() const;
+    int horizontalScrollOffset() const;
 
 protected:
     void paintEvent(QPaintEvent* ev) override;
@@ -27,5 +33,5 @@ protected:
 
 private:
     Layout la;
-    qreal _scrollY = 0.0;
+    QScrollArea* scrollArea = nullptr;
 };

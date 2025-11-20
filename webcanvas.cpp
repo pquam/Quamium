@@ -10,20 +10,45 @@ WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {
 void WebCanvas::setDisplayList(const std::vector<DisplayText>& display_list, const Layout& layout) {
     this->la = layout;
     this->display_list = display_list;
-    setMinimumSize(layout.getContentWidth(), layout.getContentHeight());
+    setMinimumSize(la.getContentWidth(), la.getContentHeight());
     update();
 }
 
-void WebCanvas::paintEvent(QPaintEvent* /*ev*/) {
+void WebCanvas::setScrollArea(QScrollArea* area) {
+    scrollArea = area;
+}
+
+int WebCanvas::verticalScrollOffset() const {
+    return (scrollArea && scrollArea->verticalScrollBar()) 
+        ? scrollArea->verticalScrollBar()->value()
+        : 0;
+}
+
+int WebCanvas::horizontalScrollOffset() const {
+    return (scrollArea && scrollArea->horizontalScrollBar()) 
+        ? scrollArea->horizontalScrollBar()->value()
+        : 0;
+}
+
+void WebCanvas::paintEvent(QPaintEvent* ev) {
     
     QPainter painter(this);
     painter.fillRect(rect(), palette().window());
 
-    for (DisplayText text : display_list) {
+    const int viewTop = verticalScrollOffset();
+    const int viewBottom = viewTop + (scrollArea ? scrollArea->viewport()->height() : height());
+
+    for (const DisplayText& text : display_list) {
+        QFontMetrics metrics(text.font);
+        const int textTop = text.y - metrics.ascent();
+        const int textBottom = text.y + metrics.descent();
+
+        if (textBottom < viewTop || textTop > viewBottom) continue;
 
         painter.setFont(text.font);
         painter.drawText(text.x, text.y, text.text);
     }
+
 }
 
 void WebCanvas::wheelEvent(QWheelEvent* ev) {

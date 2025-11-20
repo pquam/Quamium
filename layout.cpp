@@ -5,10 +5,7 @@ std::vector<DisplayText> Layout::layout(std::vector<Content> tokens, int page_wi
 {
 
     this->tokens = tokens;
-    this->page_width = page_width;
-    content_width = 0;
-    content_height = 0;
-    
+    this->page_width = page_width;    
 
     return layoutHelper();
 }
@@ -16,8 +13,6 @@ std::vector<DisplayText> Layout::layout(std::vector<Content> tokens, int page_wi
 std::vector<DisplayText> Layout::layout(int page_width)
 {
     this->page_width = page_width;
-    content_width = 0;
-    content_height = 0;
 
     return layoutHelper();
 }
@@ -27,10 +22,6 @@ std::vector<DisplayText> Layout::layoutHelper() {
     display_list.clear();
 
     bool inBody = false;
-
-    static int HSTEP, VSTEP;
-    HSTEP = 13;
-    VSTEP = 24;
 
     int w;
 
@@ -44,7 +35,7 @@ std::vector<DisplayText> Layout::layoutHelper() {
     for (Content tok : tokens) {
 
         if (tok.isTag) {
-            std::cout << "tag: " + tok.text + "\n";
+            //std::cout << "tag: " + tok.text + "\n";
 
             std::string tagName = tok.text;
             auto spacePos = tagName.find(' ');
@@ -83,7 +74,6 @@ std::vector<DisplayText> Layout::layoutHelper() {
                         break;
                     case 8:
                         inBody = true;
-                        std::cout << "Entering body! \n";
                         break;
                     case 9:
                         cursor_y += VSTEP *1.2;
@@ -152,7 +142,7 @@ std::vector<DisplayText> Layout::layoutHelper() {
 
         }
         if (!tok.isTag && inBody) {
-            std::cout << "text: " + tok.text + "\n";
+            //std::cout << "text: " + tok.text + "\n";
             for (std::string word : Utils::split(tok.text, ' ')) {
                 
                 qword = QString::fromStdString(word);

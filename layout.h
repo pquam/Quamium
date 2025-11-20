@@ -21,6 +21,9 @@ public:
         int getContentWidth() const { return content_width; }
         int getContentHeight() const { return content_height; }
 
+        void setContentWidth(int content_width) {  this->content_width = content_width; }
+        void setContentHeight(int content_height) {  this->content_height = content_height; }
+
     protected:     
 
     private:
@@ -31,6 +34,9 @@ public:
     std::vector<DisplayText> display_list;
     int content_width = 0;
     int content_height = 0;
+
+    static constexpr int HSTEP = 13;
+    static constexpr int VSTEP = 24;
 
     void addToList(int x, int y, QString text, QFont font);
 

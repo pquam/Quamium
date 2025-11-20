@@ -26,6 +26,7 @@ Quamium::Quamium(QWidget *parent)
     webCanvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     ui->webCanvas->setWidget(webCanvas);
     ui->webCanvas->setWidgetResizable(true);
+    webCanvas->setScrollArea(ui->webCanvas);
     
     std::cout << "WebCanvas created and attached to central layout" << std::endl;
     
@@ -47,6 +48,8 @@ void Quamium::onSearchButtonClicked()
 
     Lexer l;
     Layout la;
+    la.setContentHeight(height);
+    la.setContentWidth(width);
 
     std::string body = s.getBody(true);
     std::vector<Content> tokens = l.lex(body);
