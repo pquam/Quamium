@@ -3,6 +3,9 @@
 
 std::vector<Content> Lexer::lex(std::string body) {
 
+    out.clear();
+    buffer.clear();
+
     auto emit = [&](bool isTag) {
         if (buffer.empty()) return;
         Content chunk;

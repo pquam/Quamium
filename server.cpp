@@ -77,8 +77,7 @@
         host = "";
         for (; i < input.length(); i++) {
 
-            if (input[i] == '/') {
-                i++;
+            if (input[i] == ':' || input[i] == '/') {
                 break;
             }
             
@@ -87,35 +86,41 @@
 
         std::cerr << " host " + host << std::endl;
 
-        path = "/";
-        for (;i < input.length(); i++) {
 
-            if (input[i] == ':') {
-                i++;
-                break;
-            }
-
-            path += input[i];
-        }
-
-        std::cerr << "path " + path << std::endl;
-
-        if (i < input.length()) {
+        if (input[i] == ':') {
+            i++;
             port = "";
             for (;i < input.length(); i++) {
+                if (input[i] == '/') {
+                    i++;
+                    break;
+                }
                 port += input[i];
             }
         }
 
-        std::cerr << "port " + port << std::endl;       
+        std::cerr << "port " + port << std::endl;  
         
+        path = "/";
+        for (;i < input.length(); i++) {
 
-        url = scheme + "://" + host + path;
+            path += input[i];
+        }
+        
+        std::cerr << "path " + path << std::endl;
+
+        url = scheme + "://" + host + ":" + port + path;
 
         if (input == url) {
             std::cerr << " input and url match! " << std::endl;
+            std::cerr << "url: " + url << std::endl;
         }
-        std::cerr << "url: " + url << std::endl;
+        else {
+            std::cerr << " input and url DON'T match! " << std::endl;
+            std::cerr << "input: " + url << std::endl;
+            std::cerr << "url: " + url << std::endl;
+        }
+        
 
         return url;
     }

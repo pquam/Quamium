@@ -29,6 +29,9 @@ std::vector<DisplayText> Layout::layoutHelper() {
     int cursor_y = VSTEP;
     int size = 16;
 
+    content_height = 0;
+    content_width = 0;
+
     QString qword;
     QFont font;
 
@@ -76,15 +79,21 @@ std::vector<DisplayText> Layout::layoutHelper() {
                         inBody = true;
                         break;
                     case 9:
-                        cursor_y += VSTEP *1.2;
                         cursor_x = 30;
+                        inBody = false;
                         break;
                     case 10:
-                        cursor_y += VSTEP*1.2;
+                        cursor_y += VSTEP;
                         cursor_x = 30;
                         break;
+                    case 11:
+                        cursor_y += VSTEP;
+                        cursor_x = 30;
+                        break;
+                    //h1
                     case 12:
-                        size = 34;
+                        size = size *1.5;
+                        cursor_y += VSTEP*1.2;
                         font.setBold(true);
                         break;
                     case 13:
@@ -94,7 +103,8 @@ std::vector<DisplayText> Layout::layoutHelper() {
                         cursor_x = 30;
                         break;
                     case 14:
-                        size = 28;
+                        size = size *1.4;
+                        cursor_y += VSTEP*1.2;
                         font.setBold(true);
                         break;
                     case 15:
@@ -104,7 +114,8 @@ std::vector<DisplayText> Layout::layoutHelper() {
                         cursor_x = 30;
                         break;
                     case 16:
-                        size = 24;
+                        size = size *1.3;
+                        cursor_y += VSTEP*1.2;
                         font.setBold(true);
                         break;
                     case 17:
@@ -114,7 +125,8 @@ std::vector<DisplayText> Layout::layoutHelper() {
                         cursor_x = 30;
                         break;
                     case 18:
-                        size = 20;
+                        size = size *1.2;
+                        cursor_y += VSTEP*1.2;
                         font.setBold(true);
                         break;
                     case 19:
@@ -144,13 +156,18 @@ std::vector<DisplayText> Layout::layoutHelper() {
         if (!tok.isTag && inBody) {
             //std::cout << "text: " + tok.text + "\n";
             for (std::string word : Utils::split(tok.text, ' ')) {
-                
+
                 qword = QString::fromStdString(word);
 
                 QFontMetrics metrics(font);
                 w = metrics.horizontalAdvance(qword);
 
                 if (cursor_x + w > page_width - HSTEP) {
+                    cursor_y += metrics.height() * 1.25;
+                    cursor_x = HSTEP;
+                }
+
+                if (!(word.find('\n') == std::string::npos)) {
                     cursor_y += metrics.height() * 1.25;
                     cursor_x = HSTEP;
                 }
