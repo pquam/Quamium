@@ -27,6 +27,7 @@ class Server {
         Server();
 
         void setInput(std::string);
+        std::string getInput();
         std::string parseInputToURL(std::string);
 
 

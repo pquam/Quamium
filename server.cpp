@@ -20,12 +20,15 @@
         url = "https://patrick.quam.computer";
         scheme = "https";
         port = "443";
-        getBody();
 
     }
 
     void Server::setInput(std::string input) {
         this->input = input;
+    }
+
+    std::string Server::getInput() {
+        return input;
     }
 
 
@@ -53,66 +56,73 @@
             input = "https://patrick.quam.computer";
         }
 
-        int i = 0;
+        scheme, host, port, path = "";
+        enum class State { Scheme, Host, Port, Path } state = State::Host;
+        size_t i = 0;
 
-        if (input.find("://") != std::string::npos) {
-            if (input[4] == 's') {
-                scheme = "https";
-                port = "443";
-                i=8;
-            }
-            else {
-                scheme = "http";
-                port = "80";
-                i=7;
-            }
-
+        auto schemePos = input.find("://");
+        if (schemePos != std::string::npos) {
+            scheme = input.substr(0, schemePos);
+            state = State::Host;
+            i = schemePos + 3;
+        }
+        else {
+            scheme = "https";
+            port = "443";
         }
 
-        std::cerr << scheme << std::endl;
-
-        host = "";
-        for (; i < input.length(); i++) {
-
-            if (input[i] == '/') {
-                i++;
+        for (; i < input.size(); ++i) {
+            char c = input[i];
+            switch (state) {
+            case State::Scheme:
+                // not used in this variant
+                break;
+            case State::Host:
+                if (c == ':') {
+                    state = State::Port;
+                } else if (c == '/') {
+                    state = State::Path;
+                    path.clear();
+                    path.push_back(c);
+                } else {
+                    host.push_back(c);
+                }
+                break;
+            case State::Port:
+                if (c == '/') {
+                    state = State::Path;
+                    path.clear();
+                    path.push_back(c);
+                } else if (std::isdigit(static_cast<unsigned char>(c))) {
+                    port.push_back(c);
+                } // else ignore non-digits
+                break;
+            case State::Path:
+                path.push_back(c);
                 break;
             }
-            
-            host += input[i];
         }
 
-        std::cerr << " host " + host << std::endl;
-
-        path = "/";
-        for (;i < input.length(); i++) {
-
-            if (input[i] == ':') {
-                i++;
-                break;
-            }
-
-            path += input[i];
-        }
-
-        std::cerr << "path " + path << std::endl;
-
-        if (i < input.length()) {
-            port = "";
-            for (;i < input.length(); i++) {
-                port += input[i];
-            }
-        }
-
-        std::cerr << "port " + port << std::endl;       
-        
+        if (host.empty()) host = "patrick.quam.computer";
+        if (port.empty()) port = (scheme == "https" ? "443" : "80");
+        if (path.empty()) path = "/";
 
         url = scheme + "://" + host + path;
 
         if (input == url) {
             std::cerr << " input and url match! " << std::endl;
+            std::cerr << "url: " + url << std::endl;
         }
-        std::cerr << "url: " + url << std::endl;
+        else {
+            std::cerr << " input and url DON'T match! " << std::endl;
+            std::cerr << "input: " + input << std::endl;
+            std::cerr << "url: " + url << std::endl;
+        }
+        
+        this->scheme = scheme;
+        this->host = host;
+        this->port = port;
+        this->path = path;
 
         return url;
     }

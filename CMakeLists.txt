@@ -33,6 +33,14 @@ set(PROJECT_SOURCES
         server.cpp
         webcanvas.h
         webcanvas.cpp
+        lexer.h
+        lexer.cpp
+        layout.h
+        layout.cpp
+        utils/utils.h
+        utils/utils.cpp
+        structs/content.h
+        structs/DisplayText.h
         ${TS_FILES}
 )
 

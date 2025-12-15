@@ -2,26 +2,36 @@
 #include <QWidget>
 #include <QTextDocument>
 #include <QString>
+#include <QPainter>
+#include <QPaintEvent>
+#include <QScrollArea>
+#include <QScrollBar>
+
+#include <iostream>
+
+#include "layout.h"
+#include "structs/DisplayText.h"
 
 class WebCanvas : public QWidget {
     Q_OBJECT
 public:
     explicit WebCanvas(QWidget* parent = nullptr);
 
-    // Call this with your HTTP response body
-    void setPlainText(const QString& text);
-    void setHtml(const QString& html); // optional: if you want basic rich text
-    void setRawHtml(const QString& html);
-
+    // Set the display list and layout used for rendering
+    void setDisplayList(const std::vector<DisplayText>& display_list, const Layout& layout);
+    void clear();
+    void setScrollArea(QScrollArea* area);
+    int verticalScrollOffset() const;
+    int horizontalScrollOffset() const;
 
 protected:
     void paintEvent(QPaintEvent* ev) override;
     void wheelEvent(QWheelEvent* ev) override;
     void resizeEvent(QResizeEvent* ev) override;
-    QSize sizeHint() const override;
+
+    std::vector<DisplayText> display_list;
 
 private:
-    QTextDocument _doc;  // does layout for us; we still "paint" it
-    qreal _scrollY = 0.0;
-    void clampScroll();
+    Layout la;
+    QScrollArea* scrollArea = nullptr;
 };

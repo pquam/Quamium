@@ -1,60 +1,60 @@
 #include "quamium.h"
-#include "ui_quamium.h"
-#include "server.h"
-#include "webcanvas.h"
 
-#include <iostream>
-#include <qobject.h>
-#include <string>
+
 
 Quamium::Quamium(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Quamium)
 {
     ui->setupUi(this);
+    resize(width, height);
+
+    // Add padding around the search controls
+    ui->horizontalLayout->setContentsMargins(5, 0, 5, 5);
+    ui->horizontalLayout->setSpacing(2);
+
+    // Ensure the central widget uses a vertical layout so children resize with the window
+    auto *mainLayout = new QVBoxLayout;
+    mainLayout->setContentsMargins(5, 5, 5, 0);
+    mainLayout->setSpacing(0);
+    ui->centralwidget->setLayout(mainLayout);
+    mainLayout->addWidget(ui->horizontalLayoutWidget);
+    mainLayout->addWidget(ui->webCanvas);
     
-    // Create WebCanvas and set it as the widget for the scroll area
-    webCanvas = new WebCanvas();
+    // Create WebCanvas and set it inside the scroll area so it fills the available space
+    webCanvas = new WebCanvas;
+    webCanvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     ui->webCanvas->setWidget(webCanvas);
-    ui->webCanvas->setWidgetResizable(false);  // Disable auto-resizing so we can control the size
-    ui->webCanvas->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    ui->webCanvas->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    webCanvas->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);  // Fixed size policy
-    webCanvas->setMinimumSize(800, 600);
+    ui->webCanvas->setWidgetResizable(true);
+    webCanvas->setScrollArea(ui->webCanvas);
     
-    std::cout << "WebCanvas created and added to scroll area" << std::endl;
+    std::cout << "WebCanvas created and attached to central layout" << std::endl;
     
     // Connect the search button's clicked signal to our slot
     connect(ui->searchButton, &QPushButton::clicked, this, &Quamium::onSearchButtonClicked);
-    onSearchButtonClicked();
 }
 
 Quamium::~Quamium()
 {
+    
     delete ui;
 }
 
 void Quamium::onSearchButtonClicked()
 {
+    webCanvas->clear();
     Server s = Server();
     s.setInput(ui->searchBar->text().toStdString());
-    std::cout << s.getBody(true) << std::endl;
 
-    drawBody(s.getBody(true));
+    Lexer l;
+    Layout la;
+    la.setContentHeight(height);
+    la.setContentWidth(width);
 
-}
+    std::string body = s.getBody(true);
+    std::vector<Content> tokens = l.lex(body);
+    std::vector<DisplayText> display_list = la.layout(tokens, width);
 
-void Quamium::drawBody(std::string body) {
+    webCanvas->setDisplayList(display_list, la);
 
-    std::cout << "in drawBody!" << std::endl;
-    std::cout << "Body length: " << body.length() << std::endl;
-    std::cout << "Body content (first 200 chars): " << body.substr(0, 200) << std::endl;
-    
-    if (body.empty()) {
-        std::cout << "Body is empty!" << std::endl;
-        webCanvas->setHtml("<html><body><h1>No content received</h1></body></html>");
-    } else {
-        // Use raw HTML method for debugging
-        webCanvas->setRawHtml(QString::fromUtf8(body.data(), (int)body.size()));
-    }
 }
