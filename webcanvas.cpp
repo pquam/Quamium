@@ -7,6 +7,13 @@ WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {
 
 }
 
+void WebCanvas::start(const Layout& layout) {
+    this->la = layout;
+    this->display_list = la.getDisplayList();
+    setMinimumSize(la.getContentWidth(), la.getContentHeight());
+    update();
+}
+
 void WebCanvas::setDisplayList(const std::vector<DisplayText>& display_list, const Layout& layout) {
     this->la = layout;
     this->display_list = display_list;

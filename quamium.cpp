@@ -53,8 +53,9 @@ void Quamium::onSearchButtonClicked()
 
     std::string body = s.getBody(true);
     std::vector<Content> tokens = l.lex(body);
-    std::vector<DisplayText> display_list = la.layout(tokens, width);
 
-    webCanvas->setDisplayList(display_list, la);
+    la.initialLayout(tokens, width);
+
+    webCanvas->start(la);
 
 }

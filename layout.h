@@ -1,6 +1,7 @@
 #pragma once
 #include "structs/content.h"
 #include "structs/DisplayText.h"
+#include "structs/FontCache.h"
 #include "utils/utils.h"
 
 #include <QString>
@@ -9,13 +10,15 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <functional>
 #include <algorithm>
 #include <cctype>
 
 class Layout {
 
 public:
-        std::vector<DisplayText> layout(std::vector<Content> tokens, int page_width);
+        Layout();
+        void initialLayout(std::vector<Content> tokens, int page_width);
         std::vector<DisplayText> layout(int page_width);
         
         int getContentWidth() const { return content_width; }
@@ -24,21 +27,47 @@ public:
         void setContentWidth(int content_width) {  this->content_width = content_width; }
         void setContentHeight(int content_height) {  this->content_height = content_height; }
 
-    protected:     
+        std::vector<DisplayText> getDisplayList() { return display_list; };
 
-    private:
-    std::vector<DisplayText> layoutHelper();
+protected:     
 
-    std::vector<Content> tokens;
-    int page_width;
-    std::vector<DisplayText> display_list;
+private:
+
+    bool inBody;
+
+    int w;
+    int h;
+
     int content_width = 0;
     int content_height = 0;
 
     static constexpr int HSTEP = 13;
     static constexpr int VSTEP = 24;
 
-    void addToList(int x, int y, QString text, QFont font);
+    int cursor_x = HSTEP;
+    int cursor_y = VSTEP;
+    int size = 16;
+
+    QString qword;
+    QFont font;
+    QFontMetrics font_metrics;
+    std::hash<std::string> hasher;
+    std::size_t key;
+    FontCache checkWord;
+    std::unordered_map<std::size_t, FontCache> metricsCache;
+
+    std::vector<DisplayText> layoutHelper();
+
+    void addFontMetricsToCache(QString word);
+    void tagHandler(Content tok);
+    void textHandler(Content tok);
+
+    std::vector<Content> tokens;
+    int page_width;
+    std::vector<DisplayText> display_list;
+
+
+    void addToList(int x, int y, QString text);
 
     std::unordered_map<std::string, int> tags = {
         {"i", 0},
