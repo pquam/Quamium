@@ -121,7 +121,7 @@ void Layout::tagHandler(Content tok) {
                 break;
             //h1
             case 12:
-                size = size *1.5;
+                size += 6;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
                 break;
@@ -131,7 +131,7 @@ void Layout::tagHandler(Content tok) {
                 addLineToList();
                 break;
             case 14:
-                size = size *1.4;
+                size += 4;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
                 break;
@@ -141,7 +141,7 @@ void Layout::tagHandler(Content tok) {
                 addLineToList();
                 break;
             case 16:
-                size = size *1.3;
+                size += 3;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
                 break;
@@ -151,7 +151,7 @@ void Layout::tagHandler(Content tok) {
                 addLineToList();
                 break;
             case 18:
-                size = size *1.2;
+                size += 2;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
                 break;
@@ -205,20 +205,6 @@ void Layout::textHandler(Content tok) {
 
 void Layout::wordHandler(std::string word) {
 
-
-    /* I think this is not what the book meant in exercise 2-1?
-
-    if (word.find('\n') != std::string::npos) {
-
-        std::vector<std::string> lineSplit = Utils::split(word, '\n');
-
-        for (std::string tempword : lineSplit) {
-            wordHandler(tempword);
-            newLine();
-        }
-    }
-    */    
-
     qword = QString::fromStdString(word);
 
     key = hasher(word + "/&/" + font.toString().toStdString());
@@ -261,8 +247,6 @@ void Layout::wordHandler(std::string word) {
 
 void Layout::addToLine(int x, QString word) {
 
-    std::cout << word.toStdString() << std::endl;
-
     DisplayText text;
 
     text.x = x;
@@ -283,7 +267,7 @@ void Layout::addLineToList() {
     for (DisplayText &text : line) {
         line_metrics = QFontMetrics(text.font);
         max_ascent = std::max(max_ascent, line_metrics.ascent());
-        max_desc = std::max(max_ascent, line_metrics.descent());
+        max_desc = std::max(max_desc, line_metrics.descent());
     }
 
     double  baseline = cursor_y - 1.25 * max_ascent;
@@ -294,6 +278,8 @@ void Layout::addLineToList() {
     }
 
     content_height = std::max(content_height, int(baseline) + h);
+
+    cursor_y = int(baseline - 1.25 * max_desc);
 
     display_list.insert(display_list.end(), line.begin(), line.end());
     line.clear();
@@ -320,12 +306,7 @@ void Layout::addFontMetricsToCache(QString word) {
 
 }
 
-void Layout::newLine() {
-    cursor_y += VSTEP;
-    cursor_x = HSTEP;
-}
-
 void Layout::newLine(double lineSpacing) {
-    cursor_y += VSTEP*lineSpacing;
+    cursor_y += VSTEP*(lineSpacing*lineSpacing);
     cursor_x = HSTEP;
 }

@@ -3,7 +3,6 @@
 
 #include "webcanvas.h"
 #include "ui_quamium.h"
-#include "webcanvas.h"
 #include "server.h"
 #include "lexer.h"
 #include "layout.h"
@@ -43,6 +42,7 @@ private:
     Lexer l;
     Layout la;
     std::string body;
+    QSize contentSize;
 
     int width = 1600;
     int height = 900;

@@ -28,8 +28,12 @@ Quamium::Quamium(QWidget *parent)
     ui->webCanvas->setWidgetResizable(true);
     webCanvas->setScrollArea(ui->webCanvas);
     
-    std::cout << "WebCanvas created and attached to central layout" << std::endl;
-    
+    connect(webCanvas, &WebCanvas::needRelayout, this, [this](int width) {
+        auto list = la.layout(width);
+        contentSize = QSize(la.getContentWidth(), la.getContentHeight());
+        webCanvas->setDisplayList(list, contentSize);
+    });
+
     // Connect the search button's clicked signal to our slot
     connect(ui->searchButton, &QPushButton::clicked, this, &Quamium::onSearchButtonClicked);
 
@@ -53,14 +57,16 @@ void Quamium::loadDefault() {
                  std::istreambuf_iterator<char>());
 
 
-        tokens = l.lex(body);
+        tokens = l.lex(body, tokens);
 
         la.setContentHeight(height);
         la.setContentWidth(width);
         la.clearMetricsCache();
         la.initialLayout(&tokens, width);
 
-        webCanvas->start(la);
+        contentSize = QSize(la.getContentWidth(), la.getContentHeight());
+
+        webCanvas->start(la.getDisplayList(),contentSize);
     }
 
     file.close();
@@ -75,16 +81,20 @@ void Quamium::onSearchButtonClicked()
     s.setInput(ui->searchBar->text().toStdString());
     body = s.getBody(true);
 
-    std::vector<Content> tokens = l.lex(body);
+    tokens = l.lex(body, tokens);
 
     la.setContentHeight(height);
     la.setContentWidth(width);
     la.clearMetricsCache();
     la.initialLayout(&tokens, width);
 
-    webCanvas->start(la);
+    contentSize = QSize(la.getContentWidth(), la.getContentHeight());
+
+    webCanvas->start(la.getDisplayList(),contentSize);
 
 }
+
+
 
 Quamium::~Quamium()
 {

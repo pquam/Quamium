@@ -37,8 +37,7 @@
         if (refresh) {
             url = parseInputToURL(input);
             std::cout << "Making HTTP request to: " << url << std::endl;
-            body = httpGet(url);
-            std::cout << "HTTP response body length: " << body.length() << std::endl;
+            body = httpGet();
         }
         
         return body;
@@ -50,9 +49,8 @@
     */
     std::string Server::parseInputToURL(std::string input) {
 
-        std::cerr << "initial input: " + input << std::endl;
-
         if (input.empty()) {
+
             input = "https://patrick.quam.computer";
         }
 
@@ -65,44 +63,48 @@
 
         auto schemePos = input.find("://");
         if (schemePos != std::string::npos) {
+
             scheme = input.substr(0, schemePos);
             state = State::Host;
             i = schemePos + 3;
         }
         else {
+
             scheme = "https";
             port = "443";
         }
 
         for (; i < input.size(); ++i) {
+
             char c = input[i];
             switch (state) {
-            case State::Scheme:
-                // not used in this variant
-                break;
-            case State::Host:
-                if (c == ':') {
-                    state = State::Port;
-                } else if (c == '/') {
-                    state = State::Path;
-                    path.clear();
+
+                case State::Scheme:
+                    // not used in this variant
+                    break;
+                case State::Host:
+                    if (c == ':') {
+                        state = State::Port;
+                    } else if (c == '/') {
+                        state = State::Path;
+                        path.clear();
+                        path.push_back(c);
+                    } else {
+                        host.push_back(c);
+                    }
+                    break;
+                case State::Port:
+                    if (c == '/') {
+                        state = State::Path;
+                        path.clear();
+                        path.push_back(c);
+                    } else if (std::isdigit(static_cast<unsigned char>(c))) {
+                        port.push_back(c);
+                    } // else ignore non-digits
+                    break;
+                case State::Path:
                     path.push_back(c);
-                } else {
-                    host.push_back(c);
-                }
-                break;
-            case State::Port:
-                if (c == '/') {
-                    state = State::Path;
-                    path.clear();
-                    path.push_back(c);
-                } else if (std::isdigit(static_cast<unsigned char>(c))) {
-                    port.push_back(c);
-                } // else ignore non-digits
-                break;
-            case State::Path:
-                path.push_back(c);
-                break;
+                    break;
             }
         }
 
@@ -127,7 +129,7 @@
     namespace http  = beast::http;
     using tcp       = asio::ip::tcp;
 
-    std::string Server::httpGet(std::string url) {
+    std::string Server::httpGet() {
 
         asio::io_context ioc;
 
@@ -136,6 +138,7 @@
         auto const results = resolver.resolve(host, port);
 
         if (scheme == "https") {
+
             // TLS context
             ssl::context ctx(ssl::context::tls_client);
     
@@ -149,6 +152,7 @@
     
             // SNI (ServerNameIndication) for virtual hosts + cert matching
             if(!SSL_set_tlsext_host_name(stream.native_handle(), host.c_str())) {
+
                 beast::error_code ec{static_cast<int>(::ERR_get_error()), asio::error::get_ssl_category()};
                 throw beast::system_error{ec};
             }
@@ -172,12 +176,12 @@
     
             // Graceful TLS shutdown
             beast::error_code ec;
-            std::cout<<ec<<std::endl;
             stream.shutdown(ec); // ignore EOF errors on some servers
     
             return res.body();
     
         } else {
+
             // Plain TCP (HTTP)
             beast::tcp_stream stream(ioc);
             stream.connect(results);
@@ -195,8 +199,9 @@
     
             beast::error_code ec;
             if (stream.socket().shutdown(tcp::socket::shutdown_both, ec) 
-                && ec != beast::errc::not_connected) {
-                    std::cerr << "Shutdown error: " << ec.message() << "\n";
+            && ec != beast::errc::not_connected) {
+
+                std::cerr << "Shutdown error: " << ec.message() << "\n";
             }
     
             return res.body();

@@ -30,7 +30,7 @@ public:
 
         void clearMetricsCache() { metricsCache.clear(); }
 
-        std::vector<DisplayText> getDisplayList() { return display_list; };
+        std::vector<DisplayText>& getDisplayList() { return display_list; };
 
 protected:     
 
@@ -45,7 +45,7 @@ private:
     int content_height = 0;
 
     int HSTEP = 13;
-    static constexpr int VSTEP = 24;
+    static constexpr int VSTEP = 30;
 
     int cursor_x = HSTEP;
     int cursor_y = VSTEP;
@@ -73,7 +73,6 @@ private:
     void tagHandler(Content tok);
     void textHandler(Content tok);
     void wordHandler(std::string word);
-    void newLine();
     void newLine(double lineSpacing);
 
     void addToLine(int x, QString word);

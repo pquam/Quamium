@@ -1,5 +1,6 @@
 #include <string>
 
+#pragma once
 class Server {
     private:
 
@@ -33,6 +34,6 @@ class Server {
         */ 
         std::string getBody(bool refresh = false);
 
-        std::string httpGet(std::string);
+        std::string httpGet();
         
 };
