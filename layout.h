@@ -6,6 +6,7 @@
 
 #include <QString>
 #include <QFontMetrics>
+#include <QCoreApplication>
 
 #include <iostream>
 #include <vector>
@@ -18,7 +19,7 @@ class Layout {
 
 public:
         Layout();
-        void initialLayout(std::vector<Content> tokens, int page_width);
+        void initialLayout(std::vector<Content> *tokens, int page_width);
         std::vector<DisplayText> layout(int page_width);
         
         int getContentWidth() const { return content_width; }
@@ -27,13 +28,15 @@ public:
         void setContentWidth(int content_width) {  this->content_width = content_width; }
         void setContentHeight(int content_height) {  this->content_height = content_height; }
 
+        void clearMetricsCache() { metricsCache.clear(); }
+
         std::vector<DisplayText> getDisplayList() { return display_list; };
 
 protected:     
 
 private:
 
-    bool inBody;
+    int page_width;
 
     int w;
     int h;
@@ -41,12 +44,15 @@ private:
     int content_width = 0;
     int content_height = 0;
 
-    static constexpr int HSTEP = 13;
+    int HSTEP = 13;
     static constexpr int VSTEP = 24;
 
     int cursor_x = HSTEP;
     int cursor_y = VSTEP;
+
     int size = 16;
+
+    bool inBody;
 
     QString qword;
     QFont font;
@@ -55,19 +61,23 @@ private:
     std::size_t key;
     FontCache checkWord;
     std::unordered_map<std::size_t, FontCache> metricsCache;
+    std::vector<Content> tokens;
+
+    QFontMetrics line_metrics;
+    std::vector<DisplayText> line;
+    std::vector<DisplayText> display_list;
 
     std::vector<DisplayText> layoutHelper();
-
+    void layoutReset();
     void addFontMetricsToCache(QString word);
     void tagHandler(Content tok);
     void textHandler(Content tok);
+    void wordHandler(std::string word);
+    void newLine();
+    void newLine(double lineSpacing);
 
-    std::vector<Content> tokens;
-    int page_width;
-    std::vector<DisplayText> display_list;
-
-
-    void addToList(int x, int y, QString text);
+    void addToLine(int x, QString word);
+    void addLineToList();
 
     std::unordered_map<std::string, int> tags = {
         {"i", 0},
@@ -91,7 +101,11 @@ private:
         {"h4", 18},
         {"/h4", 19},
         {"li", 20},
-        {"/li", 21}
+        {"/li", 21},
+        {"ul", 22},
+        {"/ul", 23},
+        {"br", 24},
+        {"/div", 25}
     };
 
 };

@@ -32,30 +32,62 @@ Quamium::Quamium(QWidget *parent)
     
     // Connect the search button's clicked signal to our slot
     connect(ui->searchButton, &QPushButton::clicked, this, &Quamium::onSearchButtonClicked);
+
+    loadDefault();
+}
+
+void Quamium::loadDefault() {
+
+        // Open the file using ifstream
+    std::string filepath = QCoreApplication::applicationDirPath().toStdString() + "/../defaultpages/aboutblank.html";
+    std::fstream file(filepath);
+
+    // confirm file opening
+    if (file.is_open()) {
+
+
+        //string constructor overload 7
+        //template <class InputIterator>  string  (InputIterator first, InputIterator last);
+        //std::istreambuf_iterator<char>() is a default-constructed iterator that represents “end of stream”.
+        std::string body((std::istreambuf_iterator<char>(file)),
+                 std::istreambuf_iterator<char>());
+
+
+        tokens = l.lex(body);
+
+        la.setContentHeight(height);
+        la.setContentWidth(width);
+        la.clearMetricsCache();
+        la.initialLayout(&tokens, width);
+
+        webCanvas->start(la);
+    }
+
+    file.close();
+
+}
+
+void Quamium::onSearchButtonClicked()
+{
+    webCanvas->clear();
+
+    Server s = Server();
+    s.setInput(ui->searchBar->text().toStdString());
+    body = s.getBody(true);
+
+    std::vector<Content> tokens = l.lex(body);
+
+    la.setContentHeight(height);
+    la.setContentWidth(width);
+    la.clearMetricsCache();
+    la.initialLayout(&tokens, width);
+
+    webCanvas->start(la);
+
 }
 
 Quamium::~Quamium()
 {
     
     delete ui;
-}
-
-void Quamium::onSearchButtonClicked()
-{
-    webCanvas->clear();
-    Server s = Server();
-    s.setInput(ui->searchBar->text().toStdString());
-
-    Lexer l;
-    Layout la;
-    la.setContentHeight(height);
-    la.setContentWidth(width);
-
-    std::string body = s.getBody(true);
-    std::vector<Content> tokens = l.lex(body);
-
-    la.initialLayout(tokens, width);
-
-    webCanvas->start(la);
-
 }

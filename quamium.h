@@ -12,8 +12,11 @@
 #include <qobject.h>
 #include <QVBoxLayout>
 
-#include <string>
 #include <vector>
+#include <string>
+#include <fstream>
+#include <iostream>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -36,7 +39,14 @@ private:
     Ui::Quamium *ui;
     WebCanvas* webCanvas;
 
+    std::vector<Content> tokens;
+    Lexer l;
+    Layout la;
+    std::string body;
+
     int width = 1600;
     int height = 900;
+
+    void loadDefault();
 };
 #endif // QUAMIUM_H

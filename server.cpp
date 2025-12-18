@@ -56,7 +56,10 @@
             input = "https://patrick.quam.computer";
         }
 
-        scheme, host, port, path = "";
+        scheme = "";
+        host = "";
+        port = "";
+        path = "";
         enum class State { Scheme, Host, Port, Path } state = State::Host;
         size_t i = 0;
 
@@ -108,16 +111,6 @@
         if (path.empty()) path = "/";
 
         url = scheme + "://" + host + path;
-
-        if (input == url) {
-            std::cerr << " input and url match! " << std::endl;
-            std::cerr << "url: " + url << std::endl;
-        }
-        else {
-            std::cerr << " input and url DON'T match! " << std::endl;
-            std::cerr << "input: " + input << std::endl;
-            std::cerr << "url: " + url << std::endl;
-        }
         
         this->scheme = scheme;
         this->host = host;
@@ -179,6 +172,7 @@
     
             // Graceful TLS shutdown
             beast::error_code ec;
+            std::cout<<ec<<std::endl;
             stream.shutdown(ec); // ignore EOF errors on some servers
     
             return res.body();
