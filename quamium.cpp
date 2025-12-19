@@ -28,33 +28,76 @@ Quamium::Quamium(QWidget *parent)
     ui->webCanvas->setWidgetResizable(true);
     webCanvas->setScrollArea(ui->webCanvas);
     
-    std::cout << "WebCanvas created and attached to central layout" << std::endl;
-    
+    connect(webCanvas, &WebCanvas::needRelayout, this, [this](int width) {
+        auto list = la.layout(width);
+        contentSize = QSize(la.getContentWidth(), la.getContentHeight());
+        webCanvas->setDisplayList(list, contentSize);
+    });
+
     // Connect the search button's clicked signal to our slot
     connect(ui->searchButton, &QPushButton::clicked, this, &Quamium::onSearchButtonClicked);
+
+    loadDefault();
 }
 
-Quamium::~Quamium()
-{
-    
-    delete ui;
+void Quamium::loadDefault() {
+
+        // Open the file using ifstream
+    std::string filepath = QCoreApplication::applicationDirPath().toStdString() + "/../defaultpages/aboutblank.html";
+    std::fstream file(filepath);
+
+    // confirm file opening
+    if (file.is_open()) {
+
+
+        //string constructor overload 7
+        //template <class InputIterator>  string  (InputIterator first, InputIterator last);
+        //std::istreambuf_iterator<char>() is a default-constructed iterator that represents “end of stream”.
+        std::string body((std::istreambuf_iterator<char>(file)),
+                 std::istreambuf_iterator<char>());
+
+
+        tokens = l.lex(body, tokens);
+
+        la.setContentHeight(height);
+        la.setContentWidth(width);
+        la.clearMetricsCache();
+        la.initialLayout(&tokens, width);
+
+        contentSize = QSize(la.getContentWidth(), la.getContentHeight());
+
+        webCanvas->start(la.getDisplayList(),contentSize);
+    }
+
+    file.close();
+
 }
 
 void Quamium::onSearchButtonClicked()
 {
     webCanvas->clear();
+
     Server s = Server();
     s.setInput(ui->searchBar->text().toStdString());
+    body = s.getBody(true);
 
-    Lexer l;
-    Layout la;
+    tokens = l.lex(body, tokens);
+
     la.setContentHeight(height);
     la.setContentWidth(width);
+    la.clearMetricsCache();
+    la.initialLayout(&tokens, width);
 
-    std::string body = s.getBody(true);
-    std::vector<Content> tokens = l.lex(body);
-    std::vector<DisplayText> display_list = la.layout(tokens, width);
+    contentSize = QSize(la.getContentWidth(), la.getContentHeight());
 
-    webCanvas->setDisplayList(display_list, la);
+    webCanvas->start(la.getDisplayList(),contentSize);
 
+}
+
+
+
+Quamium::~Quamium()
+{
+    
+    delete ui;
 }

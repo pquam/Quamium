@@ -1,7 +1,7 @@
 #include "lexer.h"
 
 
-std::vector<Content> Lexer::lex(std::string body) {
+std::vector<Content> Lexer::lex(std::string &body, std::vector<Content> &out) {
 
     out.clear();
     buffer.clear();
@@ -15,7 +15,7 @@ std::vector<Content> Lexer::lex(std::string body) {
         buffer.clear();
     };
 
-    for (char c : body) {
+    for (char &c : body) {
         if (c == '<') {
             emit(false);
         } else if (c == '>') {

@@ -7,7 +7,8 @@ While the book is written in python, I was interested in learning a new language
 You can find the Ladybird Browser project here:
 https://github.com/LadybirdBrowser/ladybird
 
-AI was used for modifying application layouts in Qt and doing code reviews. I wrote all the application code my self.
+AI was used for modifying application layouts in Qt and doing code reviews. Code reviews can be viewed here: https://github.com/pquam/Quamium/commits/main/codereview.md
+I wrote all the application code my self.
 
 
 ## Requirements

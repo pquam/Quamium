@@ -3,7 +3,6 @@
 
 #include "webcanvas.h"
 #include "ui_quamium.h"
-#include "webcanvas.h"
 #include "server.h"
 #include "lexer.h"
 #include "layout.h"
@@ -12,8 +11,11 @@
 #include <qobject.h>
 #include <QVBoxLayout>
 
-#include <string>
 #include <vector>
+#include <string>
+#include <fstream>
+#include <iostream>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -36,7 +38,15 @@ private:
     Ui::Quamium *ui;
     WebCanvas* webCanvas;
 
+    std::vector<Content> tokens;
+    Lexer l;
+    Layout la;
+    std::string body;
+    QSize contentSize;
+
     int width = 1600;
     int height = 900;
+
+    void loadDefault();
 };
 #endif // QUAMIUM_H

@@ -18,7 +18,8 @@ public:
     explicit WebCanvas(QWidget* parent = nullptr);
 
     // Set the display list and layout used for rendering
-    void setDisplayList(const std::vector<DisplayText>& display_list, const Layout& layout);
+    void start(const std::vector<DisplayText>& displayList, QSize contentSize);
+    void setDisplayList(const std::vector<DisplayText>& display_list, QSize contentSize);
     void clear();
     void setScrollArea(QScrollArea* area);
     int verticalScrollOffset() const;
@@ -30,8 +31,9 @@ protected:
     void resizeEvent(QResizeEvent* ev) override;
 
     std::vector<DisplayText> display_list;
-
+signals:
+    void needRelayout(int width);
 private:
-    Layout la;
+    Layout* la;
     QScrollArea* scrollArea = nullptr;
 };

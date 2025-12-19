@@ -1,98 +1,228 @@
-# Quamium – Code Review (2025-12-15) by GPT-5.2 Extra-High
+# Quamium — Comprehensive Code Review ChatGPT5.1-codex-max extra-high
 
-## Summary
-- Browser skeleton stands up, but parser/layout/network glue has a few correctness gaps that will surface quickly in normal browsing (stateful lexer, host:port parsing, stale canvas on resize), and synchronous network calls currently block/crash the UI.
-This review is based on reading the repository sources (no execution). The project is a great early-stage “browser skeleton” (fetch → tokenize → lay out → paint). The main opportunities are: (1) correctness/robustness in URL parsing and HTTP handling, (2) keeping the Qt UI responsive by moving networking off the UI thread, and (3) simplifying ownership/state so resize/clear behavior is predictable.
-## Executive Summary (What to Fix Next)
+Date: 2025-12-18  
+Scope: current repository state (Qt Widgets app + simple HTML lexer/layout/renderer + Boost.Beast HTTP client)
 
-### P0 – Correctness / “Will break quickly”
-- **`server.cpp` URL parsing state reset is broken**: `scheme, host, port, path = ""` only clears `path` (comma operator). This can cause `host` and `port` to *accumulate across navigations* (e.g., `port` becoming `4438080`). Replace with explicit `.clear()` calls (or reinitialize locals, then assign to members once).
-- **`server.cpp` HTTP (non-TLS) shutdown code won’t compile**: `shutdown(...)` returns `void` but is used in a boolean `if` expression. Split into two statements: call shutdown, then inspect `ec`.
-- **UI thread is blocked by networking**: `Quamium::onSearchButtonClicked()` fetches synchronously and doesn’t handle exceptions; slow or failing requests will freeze or crash the app. Move networking off-thread or use Qt’s async networking.
-- **`webcanvas.cpp` can resurrect stale content after “clear”**: `WebCanvas::clear()` empties the display list but keeps the previous `Layout` (and its stored tokens). A resize can re-layout and redraw the old page. Clear/reset the document/layout state, or gate `resizeEvent` if nothing is loaded.
+This review focuses on: correctness, performance, responsiveness (GUI), maintainability, and code style. No code changes are made here—only recommendations.
 
-### P1 – Security / Robustness
-- **TLS hostname verification is missing**: `verify_peer` checks the chain but does not ensure the cert matches the requested host. Add hostname verification (`ssl::host_name_verification(host)` / `SSL_set1_host`) so a valid-but-wrong certificate is rejected.
-- **No timeouts / size limits / status handling**: A slow server can hang forever; large responses can blow memory; 301/302/404/500 are treated like renderable HTML. Add timeouts, `res.result()` handling, redirect following (bounded), and body size caps.
+---
 
-### P2 – Performance / Maintainability
-- **Hot-path copies in layout pipeline**: `Layout::layout(std::vector<Content> tokens, ...)` copies tokens multiple times; `WebCanvas::setDisplayList` copies `Layout` again. Prefer `const&`/move + store only what’s needed for relayout.
-- **Layout does per-word allocations and per-word `QFontMetrics` creation**: This becomes expensive as pages grow; cache metrics while the font stays constant and avoid allocating a `std::vector<std::string>` just to iterate words.
+## Executive Summary (Highest Impact First)
 
-## File-by-File Review
+1. **Avoid blocking the UI thread**: `Server::httpGet()` is synchronous and is called directly from `Quamium::onSearchButtonClicked()`. Move networking (and ideally parsing/layout too) off the GUI thread, or switch to Qt’s async networking.
+2. **Fix layout state/reset bugs**: `Layout::initialLayout()` doesn’t reset cursor/font state, so subsequent page loads can inherit previous layout state; `<ul>` handling mutates `HSTEP` and never resets reliably.
+3. **Remove large unintended copies** across modules (lexer/layout/rendering). Several APIs return vectors by value or store large objects by value, causing unnecessary allocations and slowdowns as pages grow.
+4. **Harden networking/error handling**: handle HTTP status codes, redirects, failures, and TLS hostname verification (not just CA verification).
+5. **Standardize code style and header hygiene**: missing include guards, duplicated includes, heavy includes in headers, inconsistent indentation, and debug `std::cout` calls in core hot paths.
 
-### `server.h` / `server.cpp`
-- **Separate responsibilities**: `Server` should be a network/URL client; it shouldn’t include UI (`webcanvas.h`) or contain a `WebCanvas` member. This tight coupling increases build times and makes testing difficult.
-- **Make `httpGet`’s API honest**: `httpGet(std::string url)` ignores its parameter and relies on member state (`host/port/path/scheme`). Either:
-  - parse inside `httpGet(url)` and keep it stateless, or
-  - introduce a small `ParsedUrl { scheme, host, port, target }` struct and pass that through.
-- **Fix URL parsing initialization**: use `scheme.clear(); host.clear(); port.clear(); path.clear();` (or locals) and handle:
-  - `:port` in the displayed URL (include it in `url` if non-default),
-  - fragments (`#...`) not being part of HTTP requests,
-  - whitespace trimming and basic validation (reject empty host unless you intentionally default it).
-- **Handle errors without crashing**: use `boost::system::error_code` overloads (or `try/catch`) and return an error type (or empty string + error message) rather than throwing into the UI.
-- **HTTP response handling**: consider:
-  - redirects (`Location:`) with a max depth,
-  - gzip/deflate (optional; can defer),
-  - content-type checks (render only `text/html` initially),
-  - a body size limit via Beast’s parser (`body_limit`).
-- **Logging**: prefer consistent logging (Qt logging categories, or a single `std::cerr` stream). Avoid string concatenation inside streams (`"x: " + input`) to reduce allocations.
+---
 
-### `quamium.h` / `quamium.cpp` / `main.cpp` / `quamium.ui`
-- **UI responsiveness**: do not run network I/O inside a slot. Prefer:
-  - `QNetworkAccessManager` + `QUrl` (simplest in Qt), or
-  - `boost::asio`/Beast on a worker thread with a signal to deliver HTML back to the UI thread.
-- **Error UX**: display errors in the status bar / a label (DNS failure, TLS failure, HTTP status, empty body).
-- **Sizing**: the layout width currently uses a fixed `width` member; use the scroll-area viewport width (or the canvas width) for initial line breaking so the first render matches the actual window size.
-- **Qt Designer connections**: `quamium.ui` contains a connection from `searchButton.click()` to `searchBar.copy()`, which is likely accidental. Remove or replace with an intentional action.
-- **Translations**: `main.cpp` tries to load `:/i18n/Quamium_*`, but the project has no `.qrc` resources and the `.ts` file is empty. Either:
-  - load `.qm` files from disk, or
-  - add a resource file and embed translations, or
-  - remove translation scaffolding until it’s used.
+## Build System / Repo Hygiene (CMake, project files)
 
-### `lexer.h` / `lexer.cpp`
-- **Statefulness is already handled well**: `lex()` clears `out` and `buffer`, avoiding cross-navigation contamination.
-- **Next incremental step**: split “tokenization” from “parsing”. Right now tags are raw strings; even a minimal tag parser (`name`, `is_end_tag`, `attributes`) will simplify layout and reduce string fiddling.
-- **Robustness** (future): handle comments (`<!-- -->`), `<script>/<style>` raw text, and entity decoding (`&amp;`, `&lt;`, …). These can be added progressively as you follow Browser Engineering.
+### CMake configuration
+- **Don’t hard-code developer-local Qt paths** in `CMakeLists.txt`:
+  - Current: `set(CMAKE_PREFIX_PATH "/home/pquam/Qt/6.10.0/gcc_64" ...)`.
+  - Recommendation: remove the hard-coded path and rely on `-DCMAKE_PREFIX_PATH=...` (as your README already describes), or gate it behind an option/env var.
+- Consider enabling **warnings and treating warnings as errors** in Debug/CI builds (per-compiler):
+  - GCC/Clang: `-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion`
+  - MSVC: `/W4` (and optionally `/WX`)
+- Consider enabling **sanitizers** in a dedicated build preset (ASan/UBSan) for development.
 
-### `layout.h` / `layout.cpp`
-- **Avoid copies**: iterate `for (const Content& tok : tokens)` and accept tokens by `const&` (or by value + `std::move` into the member) to prevent multiple large copies.
-- **Tag handling**: the `unordered_map<std::string, int>` + `switch` works, but gets hard to extend. Consider:
-  - an enum (`enum class Tag { BoldOn, BoldOff, ... }`) or
-  - a small function `applyTag(tagName, fontState, cursorState)` with a style stack so nested tags restore correctly.
-- **Font sizing**: `<h1>` etc multiply the current size; if headings nest or appear repeatedly without a clean reset, sizes can compound. Prefer fixed sizes per heading level (and restore prior style on end tags).
-- **Whitespace/line breaks**: HTML collapses runs of whitespace; consider normalizing whitespace in the tokenizer/parser rather than splitting by `' '` and skipping empties. Add support for `<br>` and basic block spacing rules.
-- **Undefined behavior risk**: `std::transform(..., ::tolower)` should cast to `unsigned char` inside a lambda to avoid UB for non-ASCII bytes.
+### Tracked IDE/user files
+- `CMakeLists.txt.user` is a Qt Creator user-specific file and usually should **not** be tracked in git. Recommendation: remove it from version control and add it to `.gitignore`.
 
-### `webcanvas.h` / `webcanvas.cpp`
-- **Document model**: keep a clear “document loaded?” state. Right now `Layout la` holds tokens and is used for relayout on resize; `clear()` should reset that state (tokens + content size) so resizing cannot recreate old content.
-- **Relayout policy**: `resizeEvent` always reflows at `0.95 * width()`. Consider using the scroll-area viewport width and a stable margin model (avoid magic `0.95`), and throttle relayout during continuous resizing.
-- **Paint performance** (later): for larger pages, store bounding boxes in `DisplayText` to avoid recomputing `QFontMetrics` in the paint loop, or use `QStaticText`.
+### Structure suggestions (optional)
+- If the project grows, consider splitting into directories:
+  - `src/` (app + browser pipeline)
+  - `include/` (public headers)
+  - `tests/`
+  - `resources/` (default pages, etc.)
 
-### `structs/content.h` / `structs/DisplayText.h`
-- **Header hygiene**: put `#pragma once` first; include the headers you actually rely on (`QFont`, `QColor`) rather than indirectly via `qtextformat.h`.
-- **Initialize fields**: `DisplayText` has `color` but paint ignores it; either initialize it and start using it, or remove it until colors are supported.
+---
 
-### `utils/utils.h` / `utils/utils.cpp`
-- **Minimize includes**: `utils.h` includes several unused headers; trimming speeds incremental builds.
-- **Split function semantics**: current `split` returns empty segments for consecutive/trailing delimiters. That’s OK, but document the behavior or adjust if other callers expect “skip empties”.
+## Architecture & Separation of Concerns
 
-## Build System & Repo Hygiene
+Right now the main pipeline is essentially:
+`Quamium (UI) -> Server (network fetch) -> Lexer (tokenize) -> Layout (layout display list) -> WebCanvas (paint)`
 
-### `CMakeLists.txt`
-- **Portability**: remove the hard-coded `CMAKE_PREFIX_PATH` pointing to `/home/pquam/...`; rely on user/CI-provided `CMAKE_PREFIX_PATH` or use `CMakePresets.json`.
-- **Modern CMake**: consider moving from global settings to target-based:
-  - `target_compile_features(Quamium PRIVATE cxx_std_17)`
-  - warnings (`-Wall -Wextra -Wpedantic` etc.) per compiler
-  - `CMAKE_EXPORT_COMPILE_COMMANDS` for tooling
-- **Resources**: `CMAKE_AUTORCC` is enabled but no `.qrc` exists. Either add resources (icons/translations) or disable it.
+Recommendations:
+- **Separate “document model” from rendering**:
+  - The `Layout` object currently owns tokens and also owns the output display list.
+  - Consider a clearer model:
+    - `Document` owns raw HTML, parsed tokens/nodes
+    - `LayoutEngine` produces a `DisplayList`
+    - `Renderer` draws the `DisplayList`
+- **Make `Server` stateless (or clearly stateful)**:
+  - `Server::httpGet(std::string url)` takes a URL but uses member `host/port/path` instead; this is surprising. Either:
+    - pass in a parsed URL struct and use it, or
+    - make `httpGet()` operate purely on members and remove the parameter.
+- Introduce lightweight value types:
+  - `Url { scheme, host, port, path }` (parsed once, reused)
+  - `RequestResult { status_code, headers, body, error }`
 
-### Repo files
-- **Don’t commit per-user IDE files**: add `CMakeLists.txt.user` to `.gitignore` (Qt Creator user-specific). `.vscode/` is already ignored, but if it’s committed, consider removing it from version control and providing a template instead.
+---
 
-## Suggested Roadmap (Incremental, High-Value)
-1. **Stabilize networking**: fix URL parsing reset, add timeouts/status checks/body limits, add hostname verification, and stop blocking the UI thread.
-2. **Introduce a small “Document” model**: store HTML, tokens, and display list in one place; make clear/load/relayout deterministic.
-3. **Minimal HTML parser**: convert tokens to a small DOM/tree; treat `<p>`, headings, lists, `<br>`, and text nodes more systematically.
-4. **Performance pass**: remove hot-path copies; cache metrics; avoid per-word allocations.
-5. **Add tests**: unit-test URL parsing, lexer/tokenizer, and a couple of layout cases to prevent regressions as you expand functionality.
+## UI Thread Responsiveness (Qt-specific)
+
+### Synchronous network calls will freeze the app
+- `Quamium::onSearchButtonClicked()` performs a blocking DNS resolve, TCP connect, TLS handshake, HTTP request, and full response read on the **GUI thread**.
+- Recommendation options:
+  1. Use **Qt networking** (`QNetworkAccessManager`) for async I/O and simpler TLS handling.
+  2. Keep Boost.Beast but run it in a **worker thread** (`QThread`, `QtConcurrent::run`, or `std::jthread`) and deliver results back via signals/slots.
+
+### Progress / cancellation UX
+- Add a minimal loading state:
+  - disable search button while loading
+  - show “Loading…” in status bar
+  - allow cancel/stop (even if initially it only ignores late responses)
+
+---
+
+## Correctness & Functional Issues
+
+### Layout state reset on new pages
+- `Layout::layout(int page_width)` resets layout state via `layoutReset()`.
+- `Layout::initialLayout(...)` currently does **not** reset state before laying out new tokens; it only copies tokens and calls `layoutHelper()`.
+- Recommendation: ensure new page loads always start from a clean layout state (cursor positions, font, indentation, etc.).
+
+### `<ul>` indentation mutates `HSTEP`
+- In `Layout::tagHandler()`, `<ul>` and `</ul>` change `HSTEP` directly (`HSTEP += 13` / `HSTEP -= 13`).
+- This is risky because `HSTEP` is also used as your left margin baseline; if tags mismatch or layout is reused, indentation can drift.
+- Recommendation: keep `HSTEP` constant as a base margin, and track indentation separately (e.g., `indent_level` or a stack).
+
+### Font sizing logic and nesting
+- Headings modify `size` multiplicatively (`size = size * 1.5`, etc.) but then reset to `16` on closing tags.
+- This will behave poorly with nested tags or multiple headings in a row.
+- Recommendation: manage font state with a stack (push current style on open tag, pop on close).
+
+### Possible bug in line metrics calculations
+- In `Layout::addLineToList()`:
+  - `max_desc` is computed using `std::max(max_ascent, line_metrics.descent())`, which looks like a typo (it compares against `max_ascent` rather than `max_desc`).
+  - `max_desc` is then not used in baseline calculations.
+- Recommendation: revisit baseline/line spacing calculations and ensure ascent/descent are handled correctly.
+
+### URL parsing and composition
+- `Server::parseInputToURL()` parses a `port` but the returned `url` omits it (`scheme + "://" + host + path`).
+- Recommendation: include `:port` in the URL when non-default, or avoid building a string URL if the real source of truth is `scheme/host/port/path`.
+
+### `.ui` connections that likely don’t work
+- In `quamium.ui`, there is a connection using `<signal>click()</signal>` on the search button. `click()` is typically a **slot**, not a signal.
+- Recommendation: fix/remove this in Qt Designer (should probably be `clicked()`), and avoid accidental runtime warnings.
+
+### Shadowed variables (readability + potential bugs)
+- In `Quamium::loadDefault()`, a local `std::string body` shadows the `Quamium::body` member. In `Quamium::onSearchButtonClicked()`, a local `tokens` shadows the member `tokens`.
+- This isn’t necessarily incorrect today, but it makes future changes error-prone.
+- Recommendation: avoid shadowing members; use distinct names or assign directly to the member when that’s the intent.
+
+### Tag lowercasing correctness
+- `Layout::tagHandler()` lowercases via `std::transform(..., ::tolower)`. `::tolower` is undefined for negative `char` values unless cast to `unsigned char`.
+- Recommendation: use a safe cast (or a lambda) when lowercasing.
+
+### Resize relayout / repaint flow
+- `WebCanvas::resizeEvent()` recalculates layout and updates internal state, but doesn’t explicitly call `update()`.
+- Recommendation: ensure a repaint is triggered after relayout (especially if you later add more complex invalidation/caching).
+
+---
+
+## Performance & Memory Optimizations
+
+### Avoid copying large vectors and strings
+Key copy hot-spots:
+- `Lexer::lex(std::string body)` takes the HTML body by value (copies it).
+  - Recommendation: accept `std::string_view` or `const std::string&`.
+- `Lexer` stores `out` as a member and returns it by value. Returning a member generally forces a **copy** (not NRVO).
+  - Recommendation: build the output as a local variable and return it (enables move/NRVO), or return via output parameter.
+- `Layout::getDisplayList()` returns `std::vector<DisplayText>` by value.
+  - Recommendation: return `const std::vector<DisplayText>&` (or `std::span<const DisplayText>`).
+- `WebCanvas::start(const Layout& layout)` stores a full `Layout` **by value** and then copies out the display list again.
+  - Recommendation: pass/store only the `DisplayList` needed for painting, or store a `std::shared_ptr<const Layout>` if you truly need the whole engine state.
+
+### Reduce per-frame cost in painting
+- `WebCanvas::paintEvent()` constructs `QFontMetrics` for every `DisplayText` each paint.
+  - Recommendation: store ascent/descent/height alongside each `DisplayText`, or batch by font, or reuse cached metrics.
+- Remove `std::cout` logging in hot paths:
+  - `Layout::addToLine()` prints every word—this will dominate runtime on non-trivial pages.
+- Consider reducing per-item payload:
+  - `DisplayText` stores a full `QFont` per item; this can be memory-heavy for large pages. Over time you may want a font table (id -> font) or grouping by font.
+
+### Hash key construction overhead
+- Layout cache key uses `font.toString().toStdString()` per word.
+  - Recommendation: compute a stable font key once when font changes (e.g., store current font key string), then combine with the word hash.
+
+---
+
+## Error Handling, Robustness, and Security
+
+### Networking
+- Handle and surface:
+  - DNS failures, connect timeouts, handshake failures
+  - non-200 HTTP responses (404/500)
+  - redirects (301/302) with a max redirect count
+  - content encoding and transfer encoding (chunked is handled by Beast, but compression isn’t)
+- Consider TLS hostname verification:
+  - CA validation alone doesn’t guarantee the cert matches the host unless hostname verification is configured.
+  - If staying with OpenSSL/Beast, look into setting host verification (e.g., `SSL_set1_host` / verify callback).
+
+### File loading
+- `Quamium::loadDefault()` should handle file open errors visibly (status bar message, fallback page) and rely on RAII (`std::ifstream`) rather than manual `close()`.
+
+### Input validation
+- `parseInputToURL()` currently accepts a broad range of inputs; consider:
+  - trimming whitespace
+  - rejecting unsupported schemes
+  - normalizing common user inputs (`example.com` -> `https://example.com/`)
+
+---
+
+## Code Style & Maintainability
+
+### Header hygiene
+- Add include guards or `#pragma once` consistently (currently missing in `server.h` and `lexer.h`).
+- Avoid heavy includes in headers unless needed:
+  - e.g., `<iostream>` in headers causes needless rebuilds and longer compile times.
+- Prefer forward declarations where possible (especially in `quamium.h`).
+- Specific quick wins:
+  - `quamium.h` includes `webcanvas.h` twice.
+  - `quamium.h` includes the generated `ui_quamium.h`; consider forward-declaring `Ui::Quamium` in the header and including `ui_quamium.h` only in `quamium.cpp` to reduce rebuild cost.
+
+### Const-correctness and signatures
+- Prefer `const` references for read-only inputs:
+  - `setInput(const std::string&)`, `parseInputToURL(const std::string&)`, etc.
+- Mark getters `const`:
+  - `std::string getInput() const`
+- Mark methods that don’t modify state as `const` where applicable.
+
+### Naming and consistency
+- Avoid single-letter member names like `l`, `la`, `w`, `h` for long-term readability.
+- Consider a consistent naming convention:
+  - Types: `PascalCase`
+  - Functions/vars: `camelCase` or `snake_case` (pick one)
+  - Members: suffix/prefix (e.g., `m_layout`, `m_tokens`) if you prefer Qt style.
+
+### Logging
+- Prefer Qt logging (`qDebug()`, `qWarning()`) over `std::cout`/`std::cerr` in a Qt GUI app.
+- Gate verbose logs behind a debug flag to keep release builds clean.
+
+### Formatting
+- Consider adding a `.clang-format` and formatting the project to eliminate indentation inconsistencies (especially in `server.cpp`).
+
+---
+
+## Testing Recommendations (Low Effort, High Value)
+
+Add focused unit tests for the pieces that are easiest to test deterministically:
+- `Server::parseInputToURL()` (inputs like `example.com`, `https://a.com:8443/x`, empty string)
+- `Lexer::lex()` (simple HTML fragments; ensures tag/text classification is correct)
+- Layout behavior for wrapping and basic tags (small deterministic cases)
+
+If you prefer staying within Qt tooling, `QtTest` works well; otherwise Catch2/doctest are lightweight.
+
+---
+
+## Suggested Next Steps (Prioritized)
+
+1. Move networking off the GUI thread (async fetch + UI updates).
+2. Fix layout reset/indentation state and remove debug prints in hot paths.
+3. Refactor APIs to avoid large copies (`Lexer`, `Layout`, `WebCanvas`).
+4. Improve HTTP/TLS robustness (status handling, redirects, hostname verification).
+5. Add small unit tests to lock in behavior as you iterate.

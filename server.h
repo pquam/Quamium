@@ -1,7 +1,6 @@
 #include <string>
 
-#include "webcanvas.h"
-
+#pragma once
 class Server {
     private:
 
@@ -20,8 +19,6 @@ class Server {
         //std::string getHeaders(bool refresh = false);
         //std::string parseBody();
 
-        WebCanvas page;
-
     public:
 
         Server();
@@ -37,6 +34,6 @@ class Server {
         */ 
         std::string getBody(bool refresh = false);
 
-        std::string httpGet(std::string);
+        std::string httpGet();
         
 };

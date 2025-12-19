@@ -7,10 +7,14 @@ WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {
 
 }
 
-void WebCanvas::setDisplayList(const std::vector<DisplayText>& display_list, const Layout& layout) {
-    this->la = layout;
+void WebCanvas::start(const std::vector<DisplayText>& displayList, QSize contentSize) {
     this->display_list = display_list;
-    setMinimumSize(la.getContentWidth(), la.getContentHeight());
+    setMinimumSize(contentSize.width(), contentSize.height());
+    update();
+}
+
+void WebCanvas::setDisplayList(const std::vector<DisplayText>& display_list, QSize contentSize) {
+    this->display_list = display_list;
     update();
 }
 
@@ -58,9 +62,7 @@ void WebCanvas::wheelEvent(QWheelEvent* ev) {
 
 void WebCanvas::resizeEvent(QResizeEvent* ev) {
     QWidget::resizeEvent(ev);
-    auto updatedList = this->la.layout(0.95 * WebCanvas::width());
-    this->display_list = updatedList;
-    setMinimumSize(la.getContentWidth(), la.getContentHeight());
+    emit WebCanvas::needRelayout(int(0.95 * width()));
 }
 
 void WebCanvas::clear() {
