@@ -31,6 +31,26 @@
         return input;
     }
 
+    const std::string& Server::getScheme() const {
+        return scheme;
+    }
+
+    const std::string& Server::getHost() const {
+        return host;
+    }
+
+    const std::string& Server::getPort() const {
+        return port;
+    }
+
+    const std::string& Server::getPath() const {
+        return path;
+    }
+
+    const std::string& Server::getURL() const {
+        return url;
+    }
+
 
     std::string Server::getBody(bool refresh) {
 

@@ -9,6 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(CTest)
+
 # Set Qt installation path
 set(CMAKE_PREFIX_PATH "/home/pquam/Qt/6.10.0/gcc_64" ${CMAKE_PREFIX_PATH})
 
@@ -19,8 +21,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 # Add OpenSSL support
 find_package(OpenSSL REQUIRED)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Test)
 
 set(TS_FILES Quamium_en_US.ts)
 
@@ -96,4 +98,31 @@ install(TARGETS Quamium
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(Quamium)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(QuamiumTests
+        tests/quamium_tests.cpp
+        lexer.cpp
+        layout.cpp
+        utils/utils.cpp
+        server.cpp
+    )
+
+    target_include_directories(QuamiumTests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+    target_link_libraries(QuamiumTests PRIVATE
+        Qt${QT_VERSION_MAJOR}::Test
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Boost::system
+        OpenSSL::SSL
+        OpenSSL::Crypto
+    )
+
+    add_test(NAME QuamiumTests COMMAND QuamiumTests)
+    set_tests_properties(QuamiumTests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+    )
 endif()
