@@ -2,13 +2,12 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
 
 #pragma once
 class HtmlParser {
 
     public:
-        Content parse(std::string &body);
+        Content* parse(std::string &body);
 
     protected:
 
@@ -20,7 +19,7 @@ class HtmlParser {
         void addText();
         void addTag();
 
-        Content finish();
+        Content* finish();
 
         void printTree(Content &node, int indent);
 

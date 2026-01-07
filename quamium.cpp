@@ -1,4 +1,5 @@
 #include "quamium.h"
+#include <qwindowdefs.h>
 
 
 
@@ -81,12 +82,22 @@ void Quamium::onSearchButtonClicked()
     s.setInput(ui->searchBar->text().toStdString());
     body = s.getBody(true);
 
+    /* lexer based layout
     tokens = l.lex(body, tokens);
 
     la.setContentHeight(height);
     la.setContentWidth(width);
     la.clearMetricsCache();
     la.initialLayout(&tokens, width);
+    */
+
+    root_node = p.parse(body);
+
+    nla.setContentHeight(height);
+    nla.setContentWidth(width);
+    nla.clearMetricsCache();
+    nla.initialLayout(*root_node, width);
+    
 
     contentSize = QSize(la.getContentWidth(), la.getContentHeight());
 

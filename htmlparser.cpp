@@ -4,7 +4,7 @@
 #include <vector>
 
 
-Content HtmlParser::parse(std::string &body) {
+Content* HtmlParser::parse(std::string &body) {
 
     buffer.clear();
 
@@ -69,7 +69,7 @@ void HtmlParser::addTag() {
     buffer.clear();
 }
 
-Content HtmlParser::finish() {
+Content* HtmlParser::finish() {
 
     Content node;
 
@@ -85,7 +85,7 @@ Content HtmlParser::finish() {
 
     node = unfinished.back();
     unfinished.pop_back();
-    return node;
+    return &node;
 }
 
 void printTree(Content &node, int indent) {
