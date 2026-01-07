@@ -8,11 +8,9 @@
 #include <QFontMetrics>
 #include <QCoreApplication>
 
-#include <iostream>
 #include <vector>
 #include <unordered_map>
 #include <functional>
-#include <algorithm>
 #include <cctype>
 
 class Layout {
