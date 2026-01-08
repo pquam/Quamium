@@ -1,6 +1,7 @@
 #include "nodelayout.h"
 #include "structs/DisplayText.h"
 #include "structs/content.h"
+#include <iostream>
 
 NodeLayout::NodeLayout()
         //initialize font metrics
@@ -8,11 +9,13 @@ NodeLayout::NodeLayout()
 {}
 
 
-void NodeLayout::initialLayout(Content root_node, int page_width)
+void NodeLayout::initialLayout(Content* root_node, int page_width)
 {
-    this->root_node = &root_node;
+    this->root_node = root_node;
 
     this->page_width = page_width;
+
+    //std::cout << "Initial Layout! \n";
     
     layoutHelper(root_node);
 }
@@ -23,7 +26,7 @@ std::vector<DisplayText> NodeLayout::layout(int page_width)
 
     layoutReset();
 
-    return layoutHelper(*root_node);
+    return layoutHelper(root_node);
 }
 
 void NodeLayout::layoutReset() {
@@ -40,7 +43,7 @@ void NodeLayout::layoutReset() {
     content_width = 0;
 }
 
-std::vector<DisplayText> NodeLayout::layoutHelper(Content root_node) {
+std::vector<DisplayText> NodeLayout::layoutHelper(Content* root_node) {
 
     display_list.clear();
 
@@ -49,31 +52,39 @@ std::vector<DisplayText> NodeLayout::layoutHelper(Content root_node) {
     content_height = 0;
     content_width = 0;
 
+    //std::cout << "Layout helper! \n";
 
-    recurse(&root_node);
+    recurse(root_node);
 
     return this->display_list;
 }
 
 void NodeLayout::recurse(Content* node) {
 
+    //std::cout << "node text: " + node->text + "\n";
+
     //if the node is a tag
     if (node->isTag) {
         tagHandler(*node);
-        for (Content* child : node->children) {
-            recurse(child);
-        }
     }
 
     //if the node is text
     if (!node->isTag) {
         textHandler(*node);
     }
+
+    if (!node->children.empty()) {
+        for (Content* child : node->children) {
+            recurse(child);
+        }
+    }
+    
 }
 
 void NodeLayout::tagHandler(Content tok) {
 
     std::string tagName = tok.text;
+    std::cout << "tagName: " + tagName + "\n";
     auto spacePos = tagName.find(' ');
     if (spacePos != std::string::npos) {
         tagName = tagName.substr(0, spacePos);
@@ -207,6 +218,8 @@ void NodeLayout::textHandler(Content tok) {
 }
 
 void NodeLayout::wordHandler(std::string word) {
+
+    //std::cout << " word: " + word;
 
     qword = QString::fromStdString(word);
 

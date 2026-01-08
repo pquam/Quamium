@@ -6,7 +6,7 @@ struct Content {
 
     bool isTag = false;
     std::string text;
-    Content* parent;
+    std::vector<std::string> attributes;
+    Content* parent = nullptr;
     std::vector<Content*> children;
-
 };

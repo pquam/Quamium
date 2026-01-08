@@ -37,8 +37,12 @@ set(PROJECT_SOURCES
         webcanvas.cpp
         lexer.h
         lexer.cpp
+        htmlparser.h
+        htmlparser.cpp
         layout.h
         layout.cpp
+        nodelayout.h
+        nodelayout.cpp
         utils/utils.h
         utils/utils.cpp
         structs/content.h

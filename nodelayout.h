@@ -17,7 +17,7 @@ class NodeLayout {
 
 public:
         NodeLayout();
-        void initialLayout(Content root_token, int page_width);
+        void initialLayout(Content* root_node, int page_width);
         std::vector<DisplayText> layout(int page_width);
         
         int getContentWidth() const { return content_width; }
@@ -66,7 +66,7 @@ private:
     std::vector<DisplayText> line;
     std::vector<DisplayText> display_list;
 
-    std::vector<DisplayText> layoutHelper(Content root_token);
+    std::vector<DisplayText> layoutHelper(Content* root_node);
     void layoutReset();
     void recurse(Content* node);
     void addFontMetricsToCache(QString word);

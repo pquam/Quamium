@@ -91,12 +91,13 @@ void Quamium::onSearchButtonClicked()
     la.initialLayout(&tokens, width);
     */
 
-    root_node = p.parse(body);
+    root_node = p.parse(body, htmlTreeHolder);
+    p.printTree(root_node, 2);
 
     nla.setContentHeight(height);
     nla.setContentWidth(width);
     nla.clearMetricsCache();
-    nla.initialLayout(*root_node, width);
+    nla.initialLayout(root_node, width);
     
 
     contentSize = QSize(la.getContentWidth(), la.getContentHeight());
