@@ -84,7 +84,6 @@ void NodeLayout::recurse(Content* node) {
 void NodeLayout::tagHandler(Content tok) {
 
     std::string tagName = tok.text;
-    std::cout << "tagName: " + tagName + "\n";
     auto spacePos = tagName.find(' ');
     if (spacePos != std::string::npos) {
         tagName = tagName.substr(0, spacePos);

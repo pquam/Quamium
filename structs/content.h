@@ -9,4 +9,12 @@ struct Content {
     std::vector<std::string> attributes;
     Content* parent = nullptr;
     std::vector<Content*> children;
+
+    public:
+        void reset() {
+            isTag = false;
+            text = "";
+            parent = nullptr;
+            children.clear();
+        }
 };

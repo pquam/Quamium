@@ -20,7 +20,7 @@ class HtmlParser {
 
         std::string selfClosingTags[14] = {
             "area", "base", "br", "col", "embed", "hr", "img", "input",
-    "link", "meta", "param", "source", "track", "wbr"
+            "link", "meta", "param", "source", "track", "wbr"
         };
 
         Content* addText();
