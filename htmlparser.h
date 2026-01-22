@@ -23,9 +23,13 @@ class HtmlParser {
             "link", "meta", "param", "source", "track", "wbr"
         };
 
+        bool inHeader = false;
+        bool inBody = false;
+
         Content* addText();
         Content* addTag();
 
         Content* finish();
+       Content* finishSection(std::string tag, Content* node, Content* closenode);
 
 };

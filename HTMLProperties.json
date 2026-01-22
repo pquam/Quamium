@@ -1,0 +1,82 @@
+{
+  "i": {
+    "open": { "font": { "italic": true } },
+    "close": { "font": { "italic": false } }
+  },
+  "b": {
+    "open": { "font": { "bold": true } },
+    "close": { "font": { "bold": false } }
+  },
+  "small": {
+    "open": { "font": { "size_delta": -2 } },
+    "close": { "font": { "size_delta": 2 } }
+  },
+  "big": {
+    "open": { "font": { "size_delta": 2 } },
+    "close": { "font": { "size_delta": -2 } }
+  },
+  "body": {
+    "open": { "state": { "in_body": true } },
+    "close": { "state": { "in_body": false } }
+  },
+  "p": {
+    "open": { "layout": { "cursor_y_steps": 1, "cursor_x": 30 } },
+    "close": { "layout": { "line_break": true } }
+  },
+  "h1": {
+    "open": {
+      "font": { "size_delta": 6, "bold": true },
+      "layout": { "cursor_y_steps": 1.2 }
+    },
+    "close": {
+      "font": { "size_reset": 16, "bold": false },
+      "layout": { "line_break": true }
+    }
+  },
+  "h2": {
+    "open": {
+      "font": { "size_delta": 4, "bold": true },
+      "layout": { "cursor_y_steps": 1.2 }
+    },
+    "close": {
+      "font": { "size_reset": 16, "bold": false },
+      "layout": { "line_break": true }
+    }
+  },
+  "h3": {
+    "open": {
+      "font": { "size_delta": 3, "bold": true },
+      "layout": { "cursor_y_steps": 1.2 }
+    },
+    "close": {
+      "font": { "size_reset": 16, "bold": false },
+      "layout": { "line_break": true }
+    }
+  },
+  "h4": {
+    "open": {
+      "font": { "size_delta": 2, "bold": true },
+      "layout": { "cursor_y_steps": 1.2 }
+    },
+    "close": {
+      "font": { "size_reset": 16, "bold": false },
+      "layout": { "line_break": true }
+    }
+  },
+  "li": {
+    "open": { "font": { "size_reset": 16, "bold": false } },
+    "close": {
+      "font": { "size_reset": 16, "bold": false },
+      "layout": { "line_break": true }
+    }
+  },
+  "ul": {
+    "open": { "layout": { "hstep_delta": 13 } },
+    "close": {
+      "layout": { "hstep_delta": -13, "line_break": true }
+    }
+  },
+  "br": {
+    "open": { "layout": { "line_break": true } }
+  }
+}
