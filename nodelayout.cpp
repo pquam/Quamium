@@ -2,6 +2,7 @@
 #include "structs/DisplayText.h"
 #include "structs/content.h"
 #include <iostream>
+#include <ostream>
 
 NodeLayout::NodeLayout()
         //initialize font metrics
@@ -84,6 +85,7 @@ void NodeLayout::recurse(Content* node) {
 void NodeLayout::tagHandler(Content tok) {
 
     std::string tagName = tok.text;
+    std::cout << " tag name: " + tagName << std::endl;
     auto spacePos = tagName.find(' ');
     if (spacePos != std::string::npos) {
         tagName = tagName.substr(0, spacePos);
@@ -202,6 +204,8 @@ void NodeLayout::tagHandler(Content tok) {
 }
 
 void NodeLayout::textHandler(Content tok) {
+
+    std::cout << " text: " + tok.text << std::endl;
 
     font_metrics = QFontMetrics(font);
 

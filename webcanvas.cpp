@@ -8,7 +8,7 @@ WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {
 }
 
 void WebCanvas::start(const std::vector<DisplayText>& displayList, QSize contentSize) {
-    this->display_list = display_list;
+    this->display_list = displayList;
     setMinimumSize(contentSize.width(), contentSize.height());
     update();
 }
@@ -35,6 +35,8 @@ int WebCanvas::horizontalScrollOffset() const {
 }
 
 void WebCanvas::paintEvent(QPaintEvent* ev) {
+
+    std::cout << " rendering! "<< std::endl;
     
     QPainter painter(this);
     painter.fillRect(rect(), palette().window());

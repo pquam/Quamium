@@ -19,37 +19,66 @@ Content* HtmlParser::parse(std::string &body, std::vector<Content*> &htmlTreeHol
     unfinished.clear();
     
     if (!htmlTreeHolder.empty()) {
+
         for (Content* node : htmlTreeHolder) {
+
             delete node;
         }
-        //htmlTreeHolder.clear();
+        htmlTreeHolder.clear();
     }
     
 
     bool inTag = false;
+
     for (char &c : body) {
+
         if (c == '<') {
-            htmlTreeHolder.push_back(addText());
+
+            if (!buffer.empty()) {
+
+                Content* text = addText();
+                if (text != nullptr) {
+
+                    htmlTreeHolder.push_back(text);
+                }
+            }
+
             inTag = true;
+
         } else if (c == '>') {
+
             inTag = false;
-            if (buffer[0] != '!') {
-                htmlTreeHolder.push_back(addTag());
+
+            if (!buffer.empty() && buffer[0] != '!') {
+
+                Content* tagNode = addTag();
+
+                if (tagNode != nullptr) {
+
+                    htmlTreeHolder.push_back(tagNode);
+                }
             }
             else {
+
             buffer.clear();
             }
         } else {
+
             buffer += c;
         }
     }
 
     if (!inTag && !buffer.empty()) {
-        htmlTreeHolder.push_back(addText());
+
+        Content* text = addText();
+
+        if (text != nullptr) {
+
+            htmlTreeHolder.push_back(text);
+        }
     }
 
     return finish();
-
 }
 
 Content* HtmlParser::addText() {
@@ -59,6 +88,7 @@ Content* HtmlParser::addText() {
     node->parent = unfinished.empty() ? nullptr : unfinished.back();
     node->isTag = false;
     node->text = buffer;
+
     if (node->parent != nullptr) {
         node->parent->children.push_back(node);
     }
@@ -71,17 +101,17 @@ Content* HtmlParser::addText() {
 
 Content* HtmlParser::addTag() {
 
-    Content* node = new Content;
-    node->isTag = true;
-
-    Content* closenode = new Content;
-
     std::vector<std::string> splitTag = Utils::split(buffer, ' ');
+
+    if (splitTag.empty() || splitTag[0].empty()) {
+
+        buffer.clear();
+        return nullptr;
+    }
+
     std::string tag = splitTag[0];
     splitTag.erase(splitTag.begin());
     std::vector<std::string> attributes = splitTag;
-
-    
 
     bool foundMatch = false;
 
@@ -98,29 +128,31 @@ Content* HtmlParser::addTag() {
     if (tag == "/body") {
         inBody = false;
     }
-    
 
-    if (!tag.empty() && tag[0] == '/' && unfinished.size() > 1) {
+    if (!tag.empty() && tag[0] == '/') {
 
-        closenode->isTag = true;
-        closenode->text = tag;
+        if (unfinished.size() > 1) {
 
-        return finishSection(tag, node, closenode);
+            finishSection(tag.substr(1));
+        }
+
+        buffer.clear();
+
+        return nullptr;
     }
     else {
+
         for (Content* match : unfinished | std::ranges::views::reverse) {
+
             if (match->text == tag) {
+
                 foundMatch = true;
-                std::cout << "found match! \n" + tag;
             }
         }
     }
 
     if (foundMatch) {
-
-        closenode->isTag = true;
-        closenode->text = "/" + tag;
-        finishSection(tag, node, closenode);
+        finishSection(tag);
     }
 
     if (tag == "html") {
@@ -128,8 +160,16 @@ Content* HtmlParser::addTag() {
         root_node.isTag = true;
         root_node.text = tag;
         unfinished.push_back(&root_node);
+
+        buffer.clear();
+
+        return nullptr;
     }
-    else if (std::find(selfClosingTags, selfClosingTags + 14, tag)
+
+    Content* node = new Content;
+    node->isTag = true;
+
+    if (std::find(selfClosingTags, selfClosingTags + 14, tag)
     !=
     (selfClosingTags + 14)
     ||
@@ -144,22 +184,8 @@ Content* HtmlParser::addTag() {
     }
     else if (tag == "body" && inHeader) {
 
-        closenode->isTag = true;
-        closenode->text = "/head";
-        finishSection("/head", node, closenode);
+        finishSection("head");
         inHeader = false;
-
-        node->text = tag;
-        node->attributes = attributes;
-        node->parent = unfinished.empty() ? nullptr : unfinished.back();
-        unfinished.push_back(node);
-    }
-    else if (tag == "/html" && inBody) {
-        
-        closenode->isTag = true;
-        closenode->text = "/body";
-        finishSection("/body", node, closenode);
-        inBody = false;
 
         node->text = tag;
         node->attributes = attributes;
@@ -180,9 +206,7 @@ Content* HtmlParser::addTag() {
 
 Content* HtmlParser::finish() {
 
-    std::cout << "finished! \n";
-
-    Content* node = new Content;
+    Content* node = nullptr;
 
     while (unfinished.size() > 1) {
 
@@ -192,6 +216,10 @@ Content* HtmlParser::finish() {
         node->parent = unfinished.back();
 
         node->parent->children.push_back(node);
+    }
+
+    if (unfinished.empty()) {
+        return nullptr;
     }
 
     node = unfinished.back();
@@ -200,33 +228,30 @@ Content* HtmlParser::finish() {
     return node;
 }
 
-Content* HtmlParser::finishSection(std::string tag, Content* node, Content* closenode) {
+void HtmlParser::finishSection(const std::string& tag) {
 
     while (unfinished.size() > 1) {
 
-        node = unfinished.back();
+        Content* node = unfinished.back();
         unfinished.pop_back();
 
         node->parent = unfinished.back();
 
         node->parent->children.push_back(node);
 
-        if ("/" + tag == closenode->text) {
-                closenode->parent = node;
-                break;
-            }
+        if (node->text == tag) {
+            break;
+        }
     }
 
-    node = unfinished.back();
-    unfinished.pop_back();
-
-    
-
     buffer.clear();
-    return node;
 }
 
 void HtmlParser::printTree(Content* node, int indent) {
+
+    if (node == nullptr) {
+        return;
+    }
 
     for (int i = 0; i < indent; i++) {
         std::cout << " ";

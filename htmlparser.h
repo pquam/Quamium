@@ -30,6 +30,6 @@ class HtmlParser {
         Content* addTag();
 
         Content* finish();
-       Content* finishSection(std::string tag, Content* node, Content* closenode);
+        void finishSection(const std::string& tag);
 
 };
