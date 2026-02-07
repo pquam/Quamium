@@ -82,6 +82,7 @@ void Quamium::loadDefault() {
 void Quamium::onSearchButtonClicked()
 {
     webCanvas->clear();
+    nla.layoutReset();
 
     Server s = Server();
     s.setInput(ui->searchBar->text().toStdString());

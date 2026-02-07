@@ -27,6 +27,7 @@ public:
         void setContentHeight(int content_height) {  this->content_height = content_height; }
 
         void clearMetricsCache() { metricsCache.clear(); }
+        void layoutReset();
 
         std::vector<DisplayText>& getDisplayList() { return display_list; };
 
@@ -42,15 +43,18 @@ private:
     int content_width = 0;
     int content_height = 0;
 
-    int HSTEP = 13;
+    static constexpr int HSTEP = 13;
     static constexpr int VSTEP = 30;
 
     int cursor_x = HSTEP;
+    int indent = HSTEP;
     int cursor_y = VSTEP;
 
     int size = 16;
 
     bool inBody;
+
+    bool newline = false;
 
     Content* root_node;
 
@@ -67,7 +71,6 @@ private:
     std::vector<DisplayText> display_list;
 
     std::vector<DisplayText> layoutHelper(Content* root_node);
-    void layoutReset();
     void recurse(Content* node);
     void addFontMetricsToCache(QString word);
     void tagHandler(Content tok);

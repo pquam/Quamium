@@ -31,8 +31,9 @@ std::vector<DisplayText> NodeLayout::layout(int page_width)
 }
 
 void NodeLayout::layoutReset() {
-    
+
     cursor_x = HSTEP;
+    indent = HSTEP;
     cursor_y = VSTEP;
     size = 16;
 
@@ -62,7 +63,15 @@ std::vector<DisplayText> NodeLayout::layoutHelper(Content* root_node) {
 
 void NodeLayout::recurse(Content* node) {
 
-    //std::cout << "node text: " + node->text + "\n";
+    if (!node->children.empty()) {
+        for (Content* child : node->children) {
+            recurse(child);
+            if (newline) {
+                addLineToList();
+                newline = false;
+            }
+        }
+    }
 
     //if the node is a tag
     if (node->isTag) {
@@ -72,12 +81,6 @@ void NodeLayout::recurse(Content* node) {
     //if the node is text
     if (!node->isTag) {
         textHandler(*node);
-    }
-
-    if (!node->children.empty()) {
-        for (Content* child : node->children) {
-            recurse(child);
-        }
     }
     
 }
@@ -130,15 +133,14 @@ void NodeLayout::tagHandler(Content tok) {
             case 10:
                 cursor_y += VSTEP;
                 cursor_x = 30;
-                break;
-            case 11:
-                addLineToList();
+                newline = true;
                 break;
             //h1
             case 12:
                 size += 6;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
+                newline = true;
                 break;
             case 13:
                 size = 16;
@@ -149,6 +151,7 @@ void NodeLayout::tagHandler(Content tok) {
                 size += 4;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
+                newline = true;
                 break;
             case 15:
                 size = 16;
@@ -159,6 +162,7 @@ void NodeLayout::tagHandler(Content tok) {
                 size += 3;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
+                newline = true;
                 break;
             case 17:
                 size = 16;
@@ -169,6 +173,7 @@ void NodeLayout::tagHandler(Content tok) {
                 size += 2;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
+                newline = true;
                 break;
             case 19:
                 size = 16;
@@ -178,6 +183,7 @@ void NodeLayout::tagHandler(Content tok) {
             case 20:
                 size = 16;
                 font.setBold(false);
+                newline = true;
                 break;
             case 21:
                 size = 16;
@@ -185,17 +191,18 @@ void NodeLayout::tagHandler(Content tok) {
                 addLineToList();
                 break;
             case 22:
-                HSTEP += 13;
+                indent += 13;
+                newline = true;
                 break;
             case 23:
-                HSTEP -= 13;
+                indent -= 13;
                 addLineToList();
                 break;
             case 24:
                 addLineToList();
                 break;
             case 25:
-                addLineToList();
+                newline = true;
                 break;
         }
 
@@ -327,5 +334,5 @@ void NodeLayout::addFontMetricsToCache(QString word) {
 
 void NodeLayout::newLine(double lineSpacing) {
     cursor_y += VSTEP*(lineSpacing*lineSpacing);
-    cursor_x = HSTEP;
+    cursor_x = indent;
 }
