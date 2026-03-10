@@ -1,8 +1,6 @@
 #include "nodelayout.h"
 #include "structs/DisplayText.h"
 #include "structs/content.h"
-#include <iostream>
-#include <ostream>
 #include <qnamespace.h>
 
 NodeLayout::NodeLayout()
