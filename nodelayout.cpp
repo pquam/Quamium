@@ -3,6 +3,7 @@
 #include "structs/content.h"
 #include <iostream>
 #include <ostream>
+#include <qnamespace.h>
 
 NodeLayout::NodeLayout()
         //initialize font metrics
@@ -39,56 +40,71 @@ void NodeLayout::layoutReset() {
 
     font.setBold(false);
     font.setItalic(false);
+    font.setUnderline(false);
     font.setPixelSize(size);
+    color = Qt::lightGray;
 
     content_height = 0;
     content_width = 0;
+    line.clear();
+    display_list.clear();
 }
 
 std::vector<DisplayText> NodeLayout::layoutHelper(Content* root_node) {
 
-    display_list.clear();
+    if (root_node == nullptr) {
+        return {};
+    }
 
-    inBody = false;
+    display_list.clear();
+    line.clear();
 
     content_height = 0;
     content_width = 0;
 
     //std::cout << "Layout helper! \n";
 
-    recurse(root_node);
+    recurse(root_node, false);
+
+    if (!line.empty()) {
+        addLineToList();
+    }
 
     return this->display_list;
 }
 
-void NodeLayout::recurse(Content* node) {
+void NodeLayout::recurse(Content* node, bool inBody) {
 
-    if (!node->children.empty()) {
-        for (Content* child : node->children) {
-            recurse(child);
-            if (newline) {
-                addLineToList();
-                newline = false;
-            }
-        }
-    }
-
-    //if the node is a tag
+    //enter tag
     if (node->isTag) {
+        if (node->text == "body") {inBody = true;}
         tagHandler(*node);
     }
 
+    if (!node->children.empty()) {
+        for (Content* child : node->children) {
+            recurse(child, inBody);
+        }
+    }
+
     //if the node is text
-    if (!node->isTag) {
+    if (!node->isTag && inBody) {
         textHandler(*node);
     }
-    
+
+    //exit tag
+    if (node->isTag) {
+        node->text = '/' + node->text;
+        tagHandler(*node);
+        //if (node->text == "/body") {inBody = false;}
+        node->text.erase(0,1);
+    }
 }
 
 void NodeLayout::tagHandler(Content tok) {
 
     std::string tagName = tok.text;
-    std::cout << " tag name: " + tagName << std::endl;
+    //std::cout << " tag name: " + tagName << std::endl;
     auto spacePos = tagName.find(' ');
     if (spacePos != std::string::npos) {
         tagName = tagName.substr(0, spacePos);
@@ -124,23 +140,18 @@ void NodeLayout::tagHandler(Content tok) {
             case 7:
                 size -= 2;
                 break;
-            case 8:
-                inBody = true;
-                break;
-            case 9:
-                inBody = false;
-                break;
             case 10:
                 cursor_y += VSTEP;
                 cursor_x = 30;
-                newline = true;
+                break;
+            case 11:
+                addLineToList();
                 break;
             //h1
             case 12:
                 size += 6;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
-                newline = true;
                 break;
             case 13:
                 size = 16;
@@ -151,7 +162,6 @@ void NodeLayout::tagHandler(Content tok) {
                 size += 4;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
-                newline = true;
                 break;
             case 15:
                 size = 16;
@@ -162,7 +172,6 @@ void NodeLayout::tagHandler(Content tok) {
                 size += 3;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
-                newline = true;
                 break;
             case 17:
                 size = 16;
@@ -173,7 +182,6 @@ void NodeLayout::tagHandler(Content tok) {
                 size += 2;
                 cursor_y += VSTEP*1.2;
                 font.setBold(true);
-                newline = true;
                 break;
             case 19:
                 size = 16;
@@ -183,7 +191,6 @@ void NodeLayout::tagHandler(Content tok) {
             case 20:
                 size = 16;
                 font.setBold(false);
-                newline = true;
                 break;
             case 21:
                 size = 16;
@@ -192,7 +199,6 @@ void NodeLayout::tagHandler(Content tok) {
                 break;
             case 22:
                 indent += 13;
-                newline = true;
                 break;
             case 23:
                 indent -= 13;
@@ -202,7 +208,18 @@ void NodeLayout::tagHandler(Content tok) {
                 addLineToList();
                 break;
             case 25:
-                newline = true;
+                addLineToList();
+                break;
+            case 26:
+                color = Qt::blue;
+                font.setUnderline(true);
+                break;
+            case 27:
+                color = Qt::lightGray;
+                font.setUnderline(false);
+                break;
+            case 28:
+                addLineToList();
                 break;
         }
 
@@ -212,7 +229,7 @@ void NodeLayout::tagHandler(Content tok) {
 
 void NodeLayout::textHandler(Content tok) {
 
-    std::cout << " text: " + tok.text << std::endl;
+    //std::cout << " text: " + tok.text << std::endl;
 
     font_metrics = QFontMetrics(font);
 
@@ -259,12 +276,9 @@ void NodeLayout::wordHandler(std::string word) {
         addFontMetricsToCache(qword);
     }
 
-
-
-    if (cursor_x + w > page_width - HSTEP) {
+    if (cursor_x + w > page_width - HSTEP && !line.empty()) {
         addLineToList();
     }
-
 
     addToLine(cursor_x, qword);
     cursor_x +=  w + font_metrics.horizontalAdvance(" "); 
@@ -278,6 +292,7 @@ void NodeLayout::addToLine(int x, QString word) {
     text.x = x;
     text.text = word;
     text.font = font;
+    text.color = color;
 
     content_width = std::max(content_width, x + w);
     
@@ -287,6 +302,11 @@ void NodeLayout::addToLine(int x, QString word) {
 void NodeLayout::addLineToList() {
 
     //std::cout << "adding line to display list\n";
+    if (line.empty()) {
+        newLine(1.25);
+        return;
+    }
+
     int max_ascent = 0;
     int max_desc = 0;
 

@@ -4,8 +4,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <iostream>
-#include <iterator>
-#include <memory>
+#include <stack>
 #include<ranges>
 #include <ostream>
 #include <string>
@@ -17,6 +16,7 @@ Content* HtmlParser::parse(std::string &body, std::vector<Content*> &htmlTreeHol
     buffer.clear();
     root_node.reset();
     unfinished.clear();
+    inHeader = false;
     
     if (!htmlTreeHolder.empty()) {
 
@@ -29,8 +29,16 @@ Content* HtmlParser::parse(std::string &body, std::vector<Content*> &htmlTreeHol
     
 
     bool inTag = false;
+    bool inText = false;
+    std::stack<bool> tagStack;
 
-    for (char &c : body) {
+    //for (char &c : body) {
+    for (int i = 0; i < body.size(); i++) {
+        char &c = body[i];
+
+        if (c == '\n') {
+            c = ' ';
+        }
 
         if (c == '<') {
 
@@ -41,13 +49,17 @@ Content* HtmlParser::parse(std::string &body, std::vector<Content*> &htmlTreeHol
 
                     htmlTreeHolder.push_back(text);
                 }
-            }
 
-            inTag = true;
+                inTag = true;
+            }
+            else if (inText) {
+
+            }
 
         } else if (c == '>') {
 
             inTag = false;
+            inText = true;
 
             if (!buffer.empty() && buffer[0] != '!') {
 
@@ -63,6 +75,29 @@ Content* HtmlParser::parse(std::string &body, std::vector<Content*> &htmlTreeHol
             buffer.clear();
             }
         } else {
+
+            if (c == '&') {
+                if (body.substr(i+1,3) == "lt;") {
+                    c = '<';
+                    i+=3;
+                }
+                if (body.substr(i+1,3) == "gt;") {
+                    c = '>';
+                    i+=3;
+                }
+                if (body.substr(i+1,4) == "amp;") {
+                    c = '&';
+                    i+=4;
+                }
+                if (body.substr(i+1,4) == "#39;") {
+                    c = '\'';
+                    i+=4;
+                }
+                if (body.substr(i+1,5) == "quot;") {
+                    c = '"';
+                    i+=5;
+                }
+            }
 
             buffer += c;
         }
@@ -114,6 +149,10 @@ Content* HtmlParser::addTag() {
     std::vector<std::string> attributes = splitTag;
 
     bool foundMatch = false;
+    auto hasOpenTag = [this](const std::string& name) {
+        return std::any_of(unfinished.begin(), unfinished.end(),
+                           [&name](const Content* node) { return node->text == name; });
+    };
 
     if (tag == "head") {
         inHeader = true;
@@ -122,18 +161,12 @@ Content* HtmlParser::addTag() {
         inHeader = false;
     }
 
-    if (tag == "body") {
-        inBody = true;
-    }
-    if (tag == "/body") {
-        inBody = false;
-    }
-
     if (!tag.empty() && tag[0] == '/') {
 
-        if (unfinished.size() > 1) {
+        const std::string closingTag = tag.substr(1);
+        if (unfinished.size() > 1 && hasOpenTag(closingTag)) {
 
-            finishSection(tag.substr(1));
+            finishSection(closingTag);
         }
 
         buffer.clear();

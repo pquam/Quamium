@@ -1,4 +1,5 @@
 #include "webcanvas.h"
+#include <qnamespace.h>
 
 WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {
 
@@ -9,12 +10,15 @@ WebCanvas::WebCanvas(QWidget* parent) : QWidget(parent) {
 
 void WebCanvas::start(const std::vector<DisplayText>& displayList, QSize contentSize) {
     this->display_list = displayList;
-    setMinimumSize(contentSize.width(), contentSize.height());
+    setMinimumWidth(0);
+    setMinimumHeight(contentSize.height());
     update();
 }
 
 void WebCanvas::setDisplayList(const std::vector<DisplayText>& display_list, QSize contentSize) {
     this->display_list = display_list;
+    setMinimumWidth(0);
+    setMinimumHeight(contentSize.height());
     update();
 }
 
@@ -36,7 +40,7 @@ int WebCanvas::horizontalScrollOffset() const {
 
 void WebCanvas::paintEvent(QPaintEvent* ev) {
 
-    std::cout << " rendering! "<< std::endl;
+    //std::cout << " rendering! "<< std::endl;
     
     QPainter painter(this);
     painter.fillRect(rect(), palette().window());
@@ -52,6 +56,7 @@ void WebCanvas::paintEvent(QPaintEvent* ev) {
         if (textBottom < viewTop || textTop > viewBottom) continue;
 
         painter.setFont(text.font);
+        painter.setPen(text.color);
         painter.drawText(text.x, text.y, text.text);
     }
 
@@ -64,7 +69,8 @@ void WebCanvas::wheelEvent(QWheelEvent* ev) {
 
 void WebCanvas::resizeEvent(QResizeEvent* ev) {
     QWidget::resizeEvent(ev);
-    emit WebCanvas::needRelayout(int(0.95 * width()));
+    const int availableWidth = scrollArea ? scrollArea->viewport()->width() : width();
+    emit WebCanvas::needRelayout(int(0.95 * availableWidth));
 }
 
 void WebCanvas::clear() {

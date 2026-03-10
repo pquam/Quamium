@@ -11,9 +11,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(CTest)
 
-# Set Qt installation path
-set(CMAKE_PREFIX_PATH "/home/pquam/Qt/6.10.0/gcc_64" ${CMAKE_PREFIX_PATH})
-
 # Add Boost support
 cmake_policy(SET CMP0167 NEW)
 find_package(Boost REQUIRED COMPONENTS system)
