@@ -15,6 +15,7 @@
 
 
 #include "server.h"
+#include "utils/utils.h"
 
 
     Server::Server() {
@@ -79,7 +80,20 @@
         if (!std::regex_match(input,
              std::regex("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)")) 
         ) {
-            input = "https://duckduckgo.com/?q=" + input + "&kp=-1&kl=us-en&k1=-1";
+
+            std::string s;
+            for (std::string stringBuilder : Utils::split(input, ' ')) {
+                
+                if (s.empty()) {
+                    s = stringBuilder;
+                }
+                else {
+                    s += "%20" + stringBuilder;
+                }
+            }
+            std::cout << s << std::endl;
+            input = "https://mwmbl.org/?q=" + s;
+            
         }
      
         scheme = "";
