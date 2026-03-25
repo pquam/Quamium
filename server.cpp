@@ -11,6 +11,8 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 
+#include <regex>
+
 
 #include "server.h"
 
@@ -74,6 +76,12 @@
             input = "https://patrick.quam.computer";
         }
 
+        if (!std::regex_match(input,
+             std::regex("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)")) 
+        ) {
+            input = "https://duckduckgo.com/?q=" + input + "&kp=-1&kl=us-en&k1=-1";
+        }
+     
         scheme = "";
         host = "";
         port = "";
@@ -133,11 +141,6 @@
         if (path.empty()) path = "/";
 
         url = scheme + "://" + host + path;
-        
-        this->scheme = scheme;
-        this->host = host;
-        this->port = port;
-        this->path = path;
 
         return url;
     }
