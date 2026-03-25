@@ -6,8 +6,10 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(CTest)
 
 # Add Boost support
 cmake_policy(SET CMP0167 NEW)
@@ -16,8 +18,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 # Add OpenSSL support
 find_package(OpenSSL REQUIRED)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Test)
 
 set(TS_FILES Quamium_en_US.ts)
 
@@ -32,8 +34,12 @@ set(PROJECT_SOURCES
         webcanvas.cpp
         lexer.h
         lexer.cpp
+        htmlparser.h
+        htmlparser.cpp
         layout.h
         layout.cpp
+        nodelayout.h
+        nodelayout.cpp
         utils/utils.h
         utils/utils.cpp
         structs/content.h
@@ -93,4 +99,31 @@ install(TARGETS Quamium
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(Quamium)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(QuamiumTests
+        tests/quamium_tests.cpp
+        lexer.cpp
+        layout.cpp
+        utils/utils.cpp
+        server.cpp
+    )
+
+    target_include_directories(QuamiumTests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+    target_link_libraries(QuamiumTests PRIVATE
+        Qt${QT_VERSION_MAJOR}::Test
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Boost::system
+        OpenSSL::SSL
+        OpenSSL::Crypto
+    )
+
+    add_test(NAME QuamiumTests COMMAND QuamiumTests)
+    set_tests_properties(QuamiumTests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+    )
 endif()

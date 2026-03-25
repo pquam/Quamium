@@ -11,8 +11,11 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 
+#include <regex>
+
 
 #include "server.h"
+#include "utils/utils.h"
 
 
     Server::Server() {
@@ -29,6 +32,26 @@
 
     std::string Server::getInput() {
         return input;
+    }
+
+    const std::string& Server::getScheme() const {
+        return scheme;
+    }
+
+    const std::string& Server::getHost() const {
+        return host;
+    }
+
+    const std::string& Server::getPort() const {
+        return port;
+    }
+
+    const std::string& Server::getPath() const {
+        return path;
+    }
+
+    const std::string& Server::getURL() const {
+        return url;
     }
 
 
@@ -54,6 +77,25 @@
             input = "https://patrick.quam.computer";
         }
 
+        if (!std::regex_match(input,
+             std::regex("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)")) 
+        ) {
+
+            std::string s;
+            for (std::string stringBuilder : Utils::split(input, ' ')) {
+                
+                if (s.empty()) {
+                    s = stringBuilder;
+                }
+                else {
+                    s += "%20" + stringBuilder;
+                }
+            }
+            std::cout << s << std::endl;
+            input = "https://mwmbl.org/?q=" + s;
+            
+        }
+     
         scheme = "";
         host = "";
         port = "";
@@ -113,11 +155,6 @@
         if (path.empty()) path = "/";
 
         url = scheme + "://" + host + path;
-        
-        this->scheme = scheme;
-        this->host = host;
-        this->port = port;
-        this->path = path;
 
         return url;
     }

@@ -8,16 +8,18 @@
 #include <QFontMetrics>
 #include <QCoreApplication>
 
+#include <qcolor.h>
+#include <qnamespace.h>
 #include <vector>
 #include <unordered_map>
 #include <functional>
 #include <cctype>
 
-class Layout {
+class NodeLayout {
 
 public:
-        Layout();
-        void initialLayout(std::vector<Content> *tokens, int page_width);
+        NodeLayout();
+        void initialLayout(Content* root_node, int page_width);
         std::vector<DisplayText> layout(int page_width);
         
         int getContentWidth() const { return content_width; }
@@ -27,6 +29,7 @@ public:
         void setContentHeight(int content_height) {  this->content_height = content_height; }
 
         void clearMetricsCache() { metricsCache.clear(); }
+        void layoutReset();
 
         std::vector<DisplayText>& getDisplayList() { return display_list; };
 
@@ -42,31 +45,34 @@ private:
     int content_width = 0;
     int content_height = 0;
 
-    int HSTEP = 13;
+    static constexpr int HSTEP = 30;
     static constexpr int VSTEP = 30;
 
     int cursor_x = HSTEP;
+    int indent = HSTEP;
     int cursor_y = VSTEP;
 
     int size = 16;
 
-    bool inBody;
+    bool newline = false;
+
+    Content* root_node;
 
     QString qword;
     QFont font;
+    QColor color = Qt::lightGray;
     QFontMetrics font_metrics;
     std::hash<std::string> hasher;
     std::size_t key;
     FontCache checkWord;
     std::unordered_map<std::size_t, FontCache> metricsCache;
-    std::vector<Content> tokens;
 
     QFontMetrics line_metrics;
     std::vector<DisplayText> line;
     std::vector<DisplayText> display_list;
 
-    std::vector<DisplayText> layoutHelper();
-    void layoutReset();
+    std::vector<DisplayText> layoutHelper(Content* root_node);
+    void recurse(Content* node, bool inBody);
     void addFontMetricsToCache(QString word);
     void tagHandler(Content tok);
     void textHandler(Content tok);
@@ -102,7 +108,10 @@ private:
         {"ul", 22},
         {"/ul", 23},
         {"br", 24},
-        {"/div", 25}
+        {"/div", 25},
+        {"a", 26},
+        {"/a", 27},
+        {"/pre", 28}
     };
 
 };

@@ -1,4 +1,5 @@
 #include "quamium.h"
+#include <qwindowdefs.h>
 
 
 
@@ -29,8 +30,8 @@ Quamium::Quamium(QWidget *parent)
     webCanvas->setScrollArea(ui->webCanvas);
     
     connect(webCanvas, &WebCanvas::needRelayout, this, [this](int width) {
-        auto list = la.layout(width);
-        contentSize = QSize(la.getContentWidth(), la.getContentHeight());
+        auto list = nla.layout(width);
+        contentSize = QSize(nla.getContentWidth(), nla.getContentHeight());
         webCanvas->setDisplayList(list, contentSize);
     });
 
@@ -57,16 +58,21 @@ void Quamium::loadDefault() {
                  std::istreambuf_iterator<char>());
 
 
-        tokens = l.lex(body, tokens);
+        root_node = p.parse(body, htmlTreeHolder);
+        if (root_node == nullptr) {
+            return;
+        }
+        p.printTree(root_node, 2);
 
-        la.setContentHeight(height);
-        la.setContentWidth(width);
-        la.clearMetricsCache();
-        la.initialLayout(&tokens, width);
+        nla.setContentHeight(height);
+        nla.setContentWidth(width);
+        nla.clearMetricsCache();
+        nla.initialLayout(root_node, width);
+        
 
-        contentSize = QSize(la.getContentWidth(), la.getContentHeight());
+        contentSize = QSize(nla.getContentWidth(), nla.getContentHeight());
 
-        webCanvas->start(la.getDisplayList(),contentSize);
+        webCanvas->start(nla.getDisplayList(),contentSize);
     }
 
     file.close();
@@ -76,21 +82,36 @@ void Quamium::loadDefault() {
 void Quamium::onSearchButtonClicked()
 {
     webCanvas->clear();
+    nla.layoutReset();
 
     Server s = Server();
     s.setInput(ui->searchBar->text().toStdString());
     body = s.getBody(true);
 
+    /* lexer based layout
     tokens = l.lex(body, tokens);
 
     la.setContentHeight(height);
     la.setContentWidth(width);
     la.clearMetricsCache();
     la.initialLayout(&tokens, width);
+    */
 
-    contentSize = QSize(la.getContentWidth(), la.getContentHeight());
+    root_node = p.parse(body, htmlTreeHolder);
+    if (root_node == nullptr) {
+        return;
+    }
+    p.printTree(root_node, 2);
 
-    webCanvas->start(la.getDisplayList(),contentSize);
+    nla.setContentHeight(height);
+    nla.setContentWidth(width);
+    nla.clearMetricsCache();
+    nla.initialLayout(root_node, width);
+    
+
+    contentSize = QSize(nla.getContentWidth(), nla.getContentHeight());
+
+    webCanvas->start(nla.getDisplayList(),contentSize);
 
 }
 

@@ -1,11 +1,17 @@
 #ifndef QUAMIUM_H
 #define QUAMIUM_H
 
+
+#include "structs/content.h"
 #include "webcanvas.h"
 #include "ui_quamium.h"
 #include "server.h"
+
 #include "lexer.h"
 #include "layout.h"
+
+#include "htmlparser.h"
+#include "nodelayout.h"
 
 #include <QMainWindow>
 #include <qobject.h>
@@ -41,6 +47,12 @@ private:
     std::vector<Content> tokens;
     Lexer l;
     Layout la;
+
+    Content* root_node = nullptr;
+    std::vector<Content*> htmlTreeHolder = {root_node};
+    HtmlParser p;
+    NodeLayout nla;
+
     std::string body;
     QSize contentSize;
 

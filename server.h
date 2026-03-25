@@ -26,6 +26,11 @@ class Server {
         void setInput(std::string);
         std::string getInput();
         std::string parseInputToURL(std::string);
+        const std::string& getScheme() const;
+        const std::string& getHost() const;
+        const std::string& getPort() const;
+        const std::string& getPath() const;
+        const std::string& getURL() const;
 
 
         /*
