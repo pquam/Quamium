@@ -9,7 +9,6 @@
 
 #include <iostream>
 
-#include "layout.h"
 #include "structs/DisplayText.h"
 
 class WebCanvas : public QWidget {
@@ -34,6 +33,6 @@ protected:
 signals:
     void needRelayout(int width);
 private:
-    Layout* la;
+
     QScrollArea* scrollArea = nullptr;
 };

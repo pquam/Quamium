@@ -32,12 +32,8 @@ set(PROJECT_SOURCES
         server.cpp
         webcanvas.h
         webcanvas.cpp
-        lexer.h
-        lexer.cpp
         htmlparser.h
         htmlparser.cpp
-        layout.h
-        layout.cpp
         nodelayout.h
         nodelayout.cpp
         utils/utils.h
@@ -104,8 +100,6 @@ endif()
 if(BUILD_TESTING)
     add_executable(QuamiumTests
         tests/quamium_tests.cpp
-        lexer.cpp
-        layout.cpp
         utils/utils.cpp
         server.cpp
     )
