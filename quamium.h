@@ -3,6 +3,7 @@
 
 
 #include "structs/content.h"
+#include "structs/block.h"
 #include "webcanvas.h"
 #include "ui_quamium.h"
 #include "server.h"
@@ -41,10 +42,11 @@ private:
     Ui::Quamium *ui;
     WebCanvas* webCanvas;
 
-    std::vector<Content> tokens;
-
     Content* root_node = nullptr;
     std::vector<Content*> htmlTreeHolder = {root_node};
+
+    Block* document = nullptr;
+    std::vector<Block*> blockTreeHolder = {document};
     HtmlParser p;
     NodeLayout nla;
 

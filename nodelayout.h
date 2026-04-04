@@ -12,6 +12,7 @@
 #include <qnamespace.h>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <functional>
 #include <cctype>
 
@@ -113,5 +114,14 @@ private:
         {"/a", 27},
         {"/pre", 28}
     };
+
+    const std::unordered_set<std::string> BLOCK_ELEMENTS = {
+    "html", "body", "article", "section", "nav", "aside",
+    "h1", "h2", "h3", "h4", "h5", "h6", "hgroup", "header",
+    "footer", "address", "p", "hr", "pre", "blockquote",
+    "ol", "ul", "menu", "li", "dl", "dt", "dd", "figure",
+    "figcaption", "main", "div", "table", "form", "fieldset",
+    "legend", "details", "summary"
+};
 
 };
