@@ -92,7 +92,7 @@
                 }
             }
             std::cout << s << std::endl;
-            input = "https://mwmbl.org/?q=" + s;
+            input = "https://wiby.org/?q=" + s;
             
         }
      

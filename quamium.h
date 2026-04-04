@@ -7,9 +7,6 @@
 #include "ui_quamium.h"
 #include "server.h"
 
-#include "lexer.h"
-#include "layout.h"
-
 #include "htmlparser.h"
 #include "nodelayout.h"
 
@@ -45,8 +42,6 @@ private:
     WebCanvas* webCanvas;
 
     std::vector<Content> tokens;
-    Lexer l;
-    Layout la;
 
     Content* root_node = nullptr;
     std::vector<Content*> htmlTreeHolder = {root_node};
